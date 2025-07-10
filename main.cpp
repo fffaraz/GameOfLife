@@ -1,7 +1,7 @@
 #include <SFML/Graphics.hpp>
 
-#include <atomic>
 #include <array>
+#include <atomic>
 #include <iostream>
 #include <mutex>
 #include <thread>
@@ -12,10 +12,11 @@ constexpr int CELL_SIZE = 10; // Size of each cell in pixels
 
 class Grid {
 public:
-    int countLiveNeighbours(int x, int y) const;    
+    int countLiveNeighbours(int x, int y) const;
     inline bool get(int x, int y) const { return grid[(x * GRID_SIZE) + y]; }
     inline void set(int x, int y, bool value) { grid[(x * GRID_SIZE) + y] = value; }
     inline void toggle(int x, int y) { grid[(x * GRID_SIZE) + y] = !grid[(x * GRID_SIZE) + y]; }
+
 private:
     std::array<bool, GRID_SIZE * GRID_SIZE> grid;
 };
@@ -53,7 +54,7 @@ inline bool gameOfLife(const bool cell, const int liveNeighbours)
             return false; // Kill the cell if it has less than 2 or more than 3 live neighbours
         return true; // Keep the cell alive if it has 2 or 3 live neighbours
     }
-    if (liveNeighbours == 3) 
+    if (liveNeighbours == 3)
         return true; // Revive the cell if it has exactly 3 live neighbours
     return false; // Keep the cell dead if it has less than 3 or more than 3 live neighbours
 }
