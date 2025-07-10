@@ -59,6 +59,7 @@ inline bool gameOfLife(const bool cell, const int liveNeighbours)
     return false; // Keep the cell dead if it has less than 3 or more than 3 live neighbours
 }
 
+// Function to update the grid based on the rules of Conway's Game of Life
 void updateGrid()
 {
     // Get the current grid and the next grid
@@ -121,14 +122,14 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
     }
 
     // Count the number of alive cells
-    int alive = 0;
+    int numAlive = 0;
 
     // Update the vertex array
     for (int i = 0; i < GRID_SIZE; ++i) {
         for (int j = 0; j < GRID_SIZE; ++j) {
             sf::Color color = sf::Color::Black;
             if (grid->get(i, j)) {
-                ++alive;
+                ++numAlive;
                 const int liveNeighbours = grid->countLiveNeighbours(i, j);
                 switch (liveNeighbours) {
                 case 0:
@@ -157,7 +158,7 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
     }
 
     // Return the number of alive cells
-    return alive;
+    return numAlive;
 }
 
 int main()
@@ -210,8 +211,8 @@ int main()
         }
 
         // Update the grid
-        const int alive = updateVertices(window, vertices);
-        text.setString(std::to_string(alive));
+        const int numAlive = updateVertices(window, vertices);
+        text.setString(std::to_string(numAlive));
 
         // Clear the window
         window.clear();
