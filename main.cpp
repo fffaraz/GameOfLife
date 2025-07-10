@@ -1,24 +1,32 @@
 #include <SFML/Graphics.hpp>
 
 #include <atomic>
+#include <array>
 #include <iostream>
 #include <mutex>
 #include <thread>
 
 // Grid size
-const int GRID_SIZE = 100; // Size of the grid in cells
-const int CELL_SIZE = 10; // Size of each cell in pixels
+constexpr int GRID_SIZE = 100; // Size of the grid in cells
+constexpr int CELL_SIZE = 10; // Size of each cell in pixels
 
-bool grid1[GRID_SIZE * GRID_SIZE];
-bool grid2[GRID_SIZE * GRID_SIZE];
-std::atomic<bool*> gridPtr = grid1;
+class Grid {
+public:
+    int countLiveNeighbours(int x, int y) const;    
+    inline bool get(int x, int y) const { return grid[(x * GRID_SIZE) + y]; }
+    inline void set(int x, int y, bool value) { grid[(x * GRID_SIZE) + y] = value; }
+    inline void toggle(int x, int y) { grid[(x * GRID_SIZE) + y] = !grid[(x * GRID_SIZE) + y]; }
+private:
+    std::array<bool, GRID_SIZE * GRID_SIZE> grid;
+};
+
+Grid grid1;
+Grid grid2;
 std::mutex gridMutex;
+std::atomic<Grid*> gridPtr = &grid1;
 
-#define GRID(x, y) grid[(x * GRID_SIZE) + y]
-#define NEXT_GRID(x, y) nextGrid[(x * GRID_SIZE) + y]
-
-// Function to count live neighbours of a cell
-int countLiveNeighbours(const bool* grid, int x, int y)
+// Function to count the number of live neighbours for a cell at (x, y)
+int Grid::countLiveNeighbours(int x, int y) const
 {
     int liveNeighbours = 0;
     for (int i = -1; i <= 1; ++i) {
@@ -28,7 +36,7 @@ int countLiveNeighbours(const bool* grid, int x, int y)
             const int nx = x + i;
             const int ny = y + j;
             if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
-                if (GRID(nx, ny)) {
+                if (get(nx, ny)) {
                     ++liveNeighbours;
                 }
             }
@@ -41,26 +49,21 @@ int countLiveNeighbours(const bool* grid, int x, int y)
 inline bool gameOfLife(const bool cell, const int liveNeighbours)
 {
     if (cell) {
-        if (liveNeighbours < 2 || liveNeighbours > 3) {
+        if (liveNeighbours < 2 || liveNeighbours > 3)
             return false; // Kill the cell if it has less than 2 or more than 3 live neighbours
-        } else {
-            return true; // Keep the cell alive if it has 2 or 3 live neighbours
-        }
-    } else {
-        if (liveNeighbours == 3) {
-            return true; // Revive the cell if it has exactly 3 live neighbours
-        } else {
-            return false; // Keep the cell dead if it has less than 3 or more than 3 live neighbours
-        }
+        return true; // Keep the cell alive if it has 2 or 3 live neighbours
     }
+    if (liveNeighbours == 3) 
+        return true; // Revive the cell if it has exactly 3 live neighbours
+    return false; // Keep the cell dead if it has less than 3 or more than 3 live neighbours
 }
 
 void updateGrid()
 {
     // Get the current grid and the next grid
     std::lock_guard<std::mutex> lock(gridMutex);
-    const bool* grid = gridPtr.load();
-    bool* const nextGrid = grid == grid1 ? grid2 : grid1;
+    const Grid* currGrid = gridPtr.load();
+    Grid* const nextGrid = currGrid == &grid1 ? &grid2 : &grid1;
 
     // Update the grid
     for (int i = 0; i < GRID_SIZE; ++i) {
@@ -68,13 +71,13 @@ void updateGrid()
             // Randomly kill or revive a cell with a 1 in 8192 chance, otherwise apply the rules of the game
             switch (rand() & ((1 << 13) - 1)) {
             case 0:
-                NEXT_GRID(i, j) = true;
+                nextGrid->set(i, j, true);
                 break;
             case 1:
-                NEXT_GRID(i, j) = false;
+                nextGrid->set(i, j, false);
                 break;
             default:
-                NEXT_GRID(i, j) = gameOfLife(GRID(i, j), countLiveNeighbours(grid, i, j));
+                nextGrid->set(i, j, gameOfLife(currGrid->get(i, j), currGrid->countLiveNeighbours(i, j)));
                 break;
             }
         }
@@ -84,17 +87,8 @@ void updateGrid()
     gridPtr.store(nextGrid);
 }
 
-// Thread function to update the grid
-void threadFunc(std::stop_token stop_token)
-{
-    while (!stop_token.stop_requested()) {
-        updateGrid();
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-}
-
 // Function to toggle a 3x3 block of cells at the given position
-void toggleCell(bool* grid, int x, int y)
+void toggleCell(Grid* grid, int x, int y)
 {
     const int size = 1;
     for (int i = -size; i <= size; ++i) {
@@ -102,7 +96,7 @@ void toggleCell(bool* grid, int x, int y)
             int nx = x + i;
             int ny = y + j;
             if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
-                GRID(nx, ny) = !GRID(nx, ny); // Toggle cell state
+                grid->toggle(nx, ny);
             }
         }
     }
@@ -113,7 +107,7 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
 {
     // Lock the grid mutex and get the current grid
     std::lock_guard<std::mutex> lock(gridMutex);
-    bool* grid = gridPtr.load();
+    Grid* grid = gridPtr.load();
 
     // Handle mouse movement while the left button is pressed
     if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
@@ -132,9 +126,9 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
     for (int i = 0; i < GRID_SIZE; ++i) {
         for (int j = 0; j < GRID_SIZE; ++j) {
             sf::Color color = sf::Color::Black;
-            if (GRID(i, j)) {
+            if (grid->get(i, j)) {
                 ++alive;
-                const int liveNeighbours = countLiveNeighbours(grid, i, j);
+                const int liveNeighbours = grid->countLiveNeighbours(i, j);
                 switch (liveNeighbours) {
                 case 0:
                     color = sf::Color::White;
@@ -167,9 +161,6 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
 
 int main()
 {
-    // Start the grid update thread
-    std::jthread updateThread(threadFunc);
-
     // Create the main window
     sf::RenderWindow window(sf::VideoMode(GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE), "Conway's Game of Life");
     window.setFramerateLimit(100);
@@ -193,13 +184,20 @@ int main()
     sf::Font font;
     if (!font.loadFromFile("/usr/share/fonts/truetype/msttcorefonts/arial.ttf")) {
         std::cerr << "Failed to load font file" << std::endl;
-        return 1;
     }
     sf::Text text("0", font, 24);
     text.setFillColor(sf::Color::White);
     text.setPosition(10, 5);
     text.setOutlineThickness(2);
     text.setOutlineColor(sf::Color::Black);
+
+    // Start the grid update thread
+    std::jthread updateThread([](std::stop_token stop_token) {
+        while (!stop_token.stop_requested()) {
+            updateGrid();
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+    });
 
     // Start the game loop
     while (window.isOpen()) {
