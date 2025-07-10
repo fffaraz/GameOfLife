@@ -37,9 +37,7 @@ int Grid::countLiveNeighbours(int x, int y) const
             const int nx = x + i;
             const int ny = y + j;
             if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
-                if (get(nx, ny)) {
-                    ++liveNeighbours;
-                }
+                liveNeighbours += get(nx, ny) ? 1 : 0;
             }
         }
     }
@@ -95,8 +93,8 @@ void toggleCell(Grid* grid, int x, int y)
     const int size = 1;
     for (int i = -size; i <= size; ++i) {
         for (int j = -size; j <= size; ++j) {
-            int nx = x + i;
-            int ny = y + j;
+            const int nx = x + i;
+            const int ny = y + j;
             if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
                 grid->toggle(nx, ny);
             }
