@@ -13,18 +13,34 @@ constexpr int CELL_SIZE = 10; // Size of each cell in pixels
 class Grid {
 public:
     int countLiveNeighbours(int x, int y) const;
-    inline bool get(int x, int y) const { return grid[(x * GRID_SIZE) + y]; }
-    inline void set(int x, int y, bool value) { grid[(x * GRID_SIZE) + y] = value; }
-    inline void toggle(int x, int y) { grid[(x * GRID_SIZE) + y] = !grid[(x * GRID_SIZE) + y]; }
-
+    inline bool get(int x, int y) const { return grid_[(x * GRID_SIZE) + y]; }
+    inline void set(int x, int y, bool value) { grid_[(x * GRID_SIZE) + y] = value; }
+    inline void toggle(int x, int y) { grid_[(x * GRID_SIZE) + y] = !grid_[(x * GRID_SIZE) + y]; }
 private:
-    std::array<bool, GRID_SIZE * GRID_SIZE> grid;
+    std::array<bool, GRID_SIZE * GRID_SIZE> grid_;
+};
+
+class DoubleBuffer {
+public:
+    DoubleBuffer(Grid* grid1, Grid* grid2) : front_(grid1), back_(grid2) {}
+    std::pair<Grid*, Grid*> get() {
+        mutex_.lock();
+        return { front_, back_ };
+    }
+    void unlock() { mutex_.unlock(); }
+    void swap() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        std::swap(front_, back_);
+    }
+private:
+    Grid* front_;
+    Grid* back_;
+    std::mutex mutex_;
 };
 
 Grid grid1;
 Grid grid2;
-std::mutex gridMutex;
-std::atomic<Grid*> gridPtr = &grid1;
+DoubleBuffer doubleBuffer(&grid1, &grid2);
 
 // Function to count the number of live neighbours for a cell at (x, y)
 int Grid::countLiveNeighbours(int x, int y) const
@@ -61,9 +77,8 @@ inline bool gameOfLife(const bool cell, const int liveNeighbours)
 void updateGrid()
 {
     // Get the current grid and the next grid
-    std::lock_guard<std::mutex> lock(gridMutex);
-    const Grid* currGrid = gridPtr.load();
-    Grid* const nextGrid = currGrid == &grid1 ? &grid2 : &grid1;
+    auto [currGrid, nextGrid] = doubleBuffer.get();
+    doubleBuffer.unlock();
 
     // Update the grid
     for (int i = 0; i < GRID_SIZE; ++i) {
@@ -84,7 +99,7 @@ void updateGrid()
     }
 
     // Swap the grids
-    gridPtr.store(nextGrid);
+    doubleBuffer.swap();
 }
 
 // Function to toggle a 3x3 block of cells at the given position
@@ -105,9 +120,8 @@ void toggleCell(Grid* grid, int x, int y)
 // Function to update the vertex array and handle mouse input
 int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
 {
-    // Lock the grid mutex and get the current grid
-    std::lock_guard<std::mutex> lock(gridMutex);
-    Grid* grid = gridPtr.load();
+    // get the current grid
+    auto [grid, _] = doubleBuffer.get();
 
     // Handle mouse movement while the left button is pressed
     if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
@@ -154,6 +168,9 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
             vertices[index + 3].color = color;
         }
     }
+
+    // Unlock the double buffer
+    doubleBuffer.unlock();
 
     // Return the number of alive cells
     return numAlive;
