@@ -1,13 +1,13 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.14)
 
 project(gameoflife LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# SFML dependencies: sudo apt install libxrandr-dev libxcursor-dev libudev-dev
-# libfreetype-dev libopenal-dev libflac-dev libvorbis-dev libgl1-mesa-dev
-# libegl1-mesa-dev
+# SFML dependencies:
+# sudo apt install libxrandr-dev libxcursor-dev libudev-dev libfreetype-dev libopenal-dev libflac-dev libvorbis-dev libgl1-mesa-dev libegl1-mesa-dev
+# sudo dnf install CSFML-devel
 
 include(FetchContent)
 FetchContent_Declare(
