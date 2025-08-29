@@ -1,127 +1,53 @@
 #include <SFML/Graphics.hpp>
 
+#include "Grid.hpp"
+#include "DoubleBuffer.hpp"
+
 #include <array>
 #include <atomic>
 #include <iostream>
 #include <mutex>
 #include <thread>
 
-// Grid size
-constexpr int GRID_SIZE = 100; // Size of the grid in cells
-constexpr int CELL_SIZE = 10; // Size of each cell in pixels
+constexpr int GRID_SIZE = 180; // Size of the grid in cells
+constexpr int CELL_SIZE = 5; // Size of each cell in pixels
 
-class Grid {
-public:
-    int countLiveNeighbours(int x, int y) const;
-    inline bool get(int x, int y) const { return grid_[(x * GRID_SIZE) + y]; }
-    inline void set(int x, int y, bool value) { grid_[(x * GRID_SIZE) + y] = value; }
-    inline void toggle(int x, int y) { grid_[(x * GRID_SIZE) + y] = !grid_[(x * GRID_SIZE) + y]; }
-private:
-    std::array<bool, GRID_SIZE * GRID_SIZE> grid_;
-};
+DoubleBuffer<Grid<GRID_SIZE>> grid;
 
-class DoubleBuffer {
-public:
-    DoubleBuffer(Grid* grid1, Grid* grid2) : front_(grid1), back_(grid2) {}
-    std::pair<Grid*, Grid*> get() {
-        mutex_.lock();
-        return { front_, back_ };
-    }
-    void unlock() { mutex_.unlock(); }
-    void swap() {
-        std::lock_guard<std::mutex> lock(mutex_);
-        std::swap(front_, back_);
-    }
-private:
-    Grid* front_;
-    Grid* back_;
-    std::mutex mutex_;
-};
-
-Grid grid1;
-Grid grid2;
-DoubleBuffer doubleBuffer(&grid1, &grid2);
-
-// Function to count the number of live neighbours for a cell at (x, y)
-int Grid::countLiveNeighbours(int x, int y) const
-{
-    int liveNeighbours = 0;
-    for (int i = -1; i <= 1; ++i) {
-        for (int j = -1; j <= 1; ++j) {
-            if (i == 0 && j == 0)
-                continue; // Skip the cell itself
-            const int nx = x + i;
-            const int ny = y + j;
-            if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
-                liveNeighbours += get(nx, ny) ? 1 : 0;
-            }
-        }
-    }
-    return liveNeighbours;
-}
-
-// Function to apply the rules of Conway's Game of Life
-inline bool gameOfLife(const bool cell, const int liveNeighbours)
-{
-    if (cell) {
-        if (liveNeighbours < 2 || liveNeighbours > 3)
-            return false; // Kill the cell if it has less than 2 or more than 3 live neighbours
-        return true; // Keep the cell alive if it has 2 or 3 live neighbours
-    }
-    if (liveNeighbours == 3)
-        return true; // Revive the cell if it has exactly 3 live neighbours
-    return false; // Keep the cell dead if it has less than 3 or more than 3 live neighbours
-}
-
-// Function to update the grid based on the rules of Conway's Game of Life
-void updateGrid()
+static void updateGrid()
 {
     // Get the current grid and the next grid
-    auto [currGrid, nextGrid] = doubleBuffer.get();
-    doubleBuffer.unlock();
+    auto [currGrid, nextGrid] = grid.get();
+    grid.unlock();
 
     // Update the grid
-    for (int i = 0; i < GRID_SIZE; ++i) {
-        for (int j = 0; j < GRID_SIZE; ++j) {
-            // Randomly kill or revive a cell with a 1 in 8192 chance, otherwise apply the rules of the game
-            switch (rand() & ((1 << 13) - 1)) {
-            case 0:
-                nextGrid->set(i, j, true);
-                break;
-            case 1:
-                nextGrid->set(i, j, false);
-                break;
-            default:
-                nextGrid->set(i, j, gameOfLife(currGrid->get(i, j), currGrid->countLiveNeighbours(i, j)));
-                break;
-            }
-        }
-    }
+    nextGrid.update(currGrid);
+    nextGrid.addNoise();
 
     // Swap the grids
-    doubleBuffer.swap();
+    grid.swap();
 }
 
-// Function to toggle a 3x3 block of cells at the given position
-void toggleCell(Grid* grid, int x, int y)
+inline sf::Color getCellColor(int liveNeighbours)
 {
-    const int size = 1;
-    for (int i = -size; i <= size; ++i) {
-        for (int j = -size; j <= size; ++j) {
-            const int nx = x + i;
-            const int ny = y + j;
-            if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
-                grid->toggle(nx, ny);
-            }
-        }
+    switch (liveNeighbours) {
+    case 0:
+        return sf::Color::White;
+    case 1:
+        return sf::Color::Red;
+    case 2:
+        return sf::Color::Blue;
+    case 3:
+        return sf::Color::Magenta;
+    default:
+        return sf::Color::Green;
     }
 }
 
 // Function to update the vertex array and handle mouse input
 int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
 {
-    // get the current grid
-    auto [grid, _] = doubleBuffer.get();
+    auto [currGrid, _] = grid.get();
 
     // Handle mouse movement while the left button is pressed
     if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
@@ -129,8 +55,13 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
         const int x = mousePos.x / CELL_SIZE;
         const int y = mousePos.y / CELL_SIZE;
         if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
-            toggleCell(grid, x, y); // Turn on a 3x3 block
+            currGrid.toggleBlock({x, y}); // Turn on a 3x3 block
         }
+    }
+
+    // Handle right mouse button click
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Right)) {
+        currGrid.clear(); // Clear the grid
     }
 
     // Count the number of alive cells
@@ -139,28 +70,9 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
     // Update the vertex array
     for (int i = 0; i < GRID_SIZE; ++i) {
         for (int j = 0; j < GRID_SIZE; ++j) {
-            sf::Color color = sf::Color::Black;
-            if (grid->get(i, j)) {
-                ++numAlive;
-                const int liveNeighbours = grid->countLiveNeighbours(i, j);
-                switch (liveNeighbours) {
-                case 0:
-                    color = sf::Color::White;
-                    break;
-                case 1:
-                    color = sf::Color::Red;
-                    break;
-                case 2:
-                    color = sf::Color::Blue;
-                    break;
-                case 3:
-                    color = sf::Color::Magenta;
-                    break;
-                default:
-                    color = sf::Color::Green;
-                    break;
-                }
-            }
+            const bool cellAlive = currGrid.get({i, j});
+            const sf::Color color = cellAlive ? getCellColor(currGrid.countLiveNeighbours({i, j})) : sf::Color::Black;
+            if (cellAlive) ++numAlive;
             const int index = (i * GRID_SIZE + j) * 4;
             vertices[index + 0].color = color;
             vertices[index + 1].color = color;
@@ -170,7 +82,7 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
     }
 
     // Unlock the double buffer
-    doubleBuffer.unlock();
+    grid.unlock();
 
     // Return the number of alive cells
     return numAlive;
