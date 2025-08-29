@@ -8,12 +8,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # SFML dependencies:
 # sudo apt install libxrandr-dev libxcursor-dev libudev-dev libfreetype-dev libopenal-dev libflac-dev libvorbis-dev libgl1-mesa-dev libegl1-mesa-dev
 # sudo dnf install CSFML-devel
+# sudo dnf install freetype-devel libvorbis-devel flac-devel
 
 include(FetchContent)
 FetchContent_Declare(
   SFML
   GIT_REPOSITORY https://github.com/SFML/SFML.git
-  GIT_TAG 2.6.x)
+  GIT_TAG 3.0.1)
 FetchContent_MakeAvailable(SFML)
 
 add_executable(gameoflife main.cpp)

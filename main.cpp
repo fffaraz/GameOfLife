@@ -50,7 +50,7 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
     auto [currGrid, _] = grid.get();
 
     // Handle mouse movement while the left button is pressed
-    if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
         const sf::Vector2i mousePos = sf::Mouse::getPosition(window);
         const int x = mousePos.x / CELL_SIZE;
         const int y = mousePos.y / CELL_SIZE;
@@ -60,7 +60,7 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
     }
 
     // Handle right mouse button click
-    if (sf::Mouse::isButtonPressed(sf::Mouse::Right)) {
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) {
         currGrid.clear(); // Clear the grid
     }
 
@@ -91,7 +91,7 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
 int main()
 {
     // Create the main window
-    sf::RenderWindow window(sf::VideoMode(GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE), "Conway's Game of Life");
+    sf::RenderWindow window(sf::VideoMode({GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE}), "Conway's Game of Life");
     window.setFramerateLimit(100);
 
     // Vertex array for the grid
@@ -111,12 +111,12 @@ int main()
 
     // Text to display the number of alive cells
     sf::Font font;
-    if (!font.loadFromFile("/usr/share/fonts/truetype/msttcorefonts/arial.ttf")) {
+    if (!font.openFromFile("/usr/share/fonts/truetype/msttcorefonts/arial.ttf")) {
         std::cerr << "Failed to load font file" << std::endl;
     }
-    sf::Text text("0", font, 24);
+    sf::Text text(font, "0", 24);
     text.setFillColor(sf::Color::White);
-    text.setPosition(10, 5);
+    text.setPosition({10, 5});
     text.setOutlineThickness(2);
     text.setOutlineColor(sf::Color::Black);
 
@@ -131,9 +131,13 @@ int main()
     // Start the game loop
     while (window.isOpen()) {
         // Process events
-        for (auto event = sf::Event {}; window.pollEvent(event);) {
-            if (event.type == sf::Event::Closed) {
+        while (const std::optional event = window.pollEvent()) {
+            if (event->is<sf::Event::Closed>()) {
                 window.close();
+            } else if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>()) {
+                if (keyPressed->scancode == sf::Keyboard::Scancode::Escape) {
+                    window.close();
+                }
             }
         }
 
