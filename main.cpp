@@ -92,6 +92,9 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
 
 int main()
 {
+    std::cout << "Conway's Game of Life\n";
+    std::cout << "SFML version: " << SFML_VERSION_MAJOR << "." << SFML_VERSION_MINOR << "." << SFML_VERSION_PATCH << "\n";
+
     // Create the main window
     sf::RenderWindow window(sf::VideoMode({GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE}), "Conway's Game of Life");
     window.setFramerateLimit(100);
@@ -124,6 +127,7 @@ int main()
             break;
         }
     }
+
     sf::Text text(font, "0", 24);
     text.setFillColor(sf::Color::White);
     text.setPosition({10, 5});

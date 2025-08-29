@@ -13,7 +13,7 @@ include(FetchContent)
 FetchContent_Declare(
   SFML
   GIT_REPOSITORY https://github.com/SFML/SFML.git
-  GIT_TAG 3.0.1)
+  GIT_TAG 3.0.x)
 FetchContent_MakeAvailable(SFML)
 
 add_executable(gameoflife main.cpp)
