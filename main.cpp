@@ -71,13 +71,15 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
     for (int i = 0; i < GRID_SIZE; ++i) {
         for (int j = 0; j < GRID_SIZE; ++j) {
             const bool cellAlive = currGrid.get({i, j});
-            const sf::Color color = cellAlive ? getCellColor(currGrid.countLiveNeighbours({i, j})) : sf::Color::Black;
             if (cellAlive) ++numAlive;
-            const int index = (i * GRID_SIZE + j) * 4;
+            const sf::Color color = cellAlive ? getCellColor(currGrid.countLiveNeighbours({i, j})) : sf::Color::Black;
+            const int index = (i * GRID_SIZE + j) * 6;
             vertices[index + 0].color = color;
             vertices[index + 1].color = color;
             vertices[index + 2].color = color;
             vertices[index + 3].color = color;
+            vertices[index + 4].color = color;
+            vertices[index + 5].color = color;
         }
     }
 
@@ -95,24 +97,32 @@ int main()
     window.setFramerateLimit(100);
 
     // Vertex array for the grid
-    sf::VertexArray vertices(sf::Quads, GRID_SIZE * GRID_SIZE * 4);
+    sf::VertexArray vertices(sf::PrimitiveType::Triangles, GRID_SIZE * GRID_SIZE * 6);
     for (int i = 0; i < GRID_SIZE; ++i) {
         for (int j = 0; j < GRID_SIZE; ++j) {
-            const int index = (i * GRID_SIZE + j) * 4;
+            const int index = (i * GRID_SIZE + j) * 6;
             const float x = i * CELL_SIZE;
             const float y = j * CELL_SIZE;
 
-            vertices[index].position = sf::Vector2f(x, y);
+            vertices[index + 0].position = sf::Vector2f(x, y);
             vertices[index + 1].position = sf::Vector2f(x + CELL_SIZE, y);
             vertices[index + 2].position = sf::Vector2f(x + CELL_SIZE, y + CELL_SIZE);
-            vertices[index + 3].position = sf::Vector2f(x, y + CELL_SIZE);
+            vertices[index + 3].position = sf::Vector2f(x, y);
+            vertices[index + 4].position = sf::Vector2f(x, y + CELL_SIZE);
+            vertices[index + 5].position = sf::Vector2f(x + CELL_SIZE, y + CELL_SIZE);
         }
     }
 
     // Text to display the number of alive cells
     sf::Font font;
-    if (!font.openFromFile("/usr/share/fonts/truetype/msttcorefonts/arial.ttf")) {
-        std::cerr << "Failed to load font file" << std::endl;
+    const std::vector<std::string> fontPaths{
+        "/usr/share/fonts/gnu-free/FreeSans.ttf",
+        "/usr/share/fonts/truetype/msttcorefonts/arial.ttf",
+    };
+    for (const auto& path : fontPaths) {
+        if (font.openFromFile(path)) {
+            break;
+        }
     }
     sf::Text text(font, "0", 24);
     text.setFillColor(sf::Color::White);
