@@ -9,7 +9,7 @@ struct Point {
     const int y;
 };
 
-template<int SIZE>
+template <int SIZE>
 class Grid {
 public:
     int countLiveNeighbours(const Point& p) const;
@@ -27,7 +27,7 @@ private:
 };
 
 // Function to count the number of live neighbours for a cell at (x, y)
-template<int SIZE>
+template <int SIZE>
 int Grid<SIZE>::countLiveNeighbours(const Point& p) const
 {
     int liveNeighbours = 0;
@@ -38,7 +38,7 @@ int Grid<SIZE>::countLiveNeighbours(const Point& p) const
             const int nx = p.x + i;
             const int ny = p.y + j;
             if (nx >= 0 && nx < SIZE && ny >= 0 && ny < SIZE) {
-                liveNeighbours += get({nx, ny}) ? 1 : 0;
+                liveNeighbours += get({ nx, ny }) ? 1 : 0;
             }
         }
     }
@@ -46,13 +46,13 @@ int Grid<SIZE>::countLiveNeighbours(const Point& p) const
 }
 
 // Function to toggle a 3x3 block of cells at the given position
-template<int SIZE>
+template <int SIZE>
 void Grid<SIZE>::toggleBlock(const Point& p)
 {
     const int size = 1;
     for (int i = -size; i <= size; ++i) {
         for (int j = -size; j <= size; ++j) {
-            const Point n{p.x + i, p.y + j};
+            const Point n { p.x + i, p.y + j };
             if (n.x >= 0 && n.x < SIZE && n.y >= 0 && n.y < SIZE) {
                 toggle(n);
             }
@@ -61,30 +61,30 @@ void Grid<SIZE>::toggleBlock(const Point& p)
 }
 
 // Function to update the grid based on the rules of Conway's Game of Life
-template<int SIZE>
+template <int SIZE>
 void Grid<SIZE>::update(const Grid<SIZE>& current)
 {
     for (int x = 0; x < SIZE; ++x) {
         for (int y = 0; y < SIZE; ++y) {
-            const Point p{x, y};
+            const Point p { x, y };
             set(p, gameOfLife(current.get(p), current.countLiveNeighbours(p)));
         }
     }
 }
 
 // Function to add random noise to the grid
-template<int SIZE>
+template <int SIZE>
 void Grid<SIZE>::addNoise()
 {
     for (int i = 0; i < 1; ++i) {
         const int x = rand() % SIZE;
         const int y = rand() % SIZE;
-        toggle({x, y});
+        toggle({ x, y });
     }
 }
 
 // Function to clear the grid
-template<int SIZE>
+template <int SIZE>
 void Grid<SIZE>::clear()
 {
     grid_.fill(false);

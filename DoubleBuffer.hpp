@@ -2,19 +2,25 @@
 
 #include <mutex>
 
-template<typename T>
+template <typename T>
 class DoubleBuffer {
 public:
-    DoubleBuffer() : front_{buffer[0]}, back_{buffer[1]} {}
+    DoubleBuffer()
+        : front_ { buffer[0] }
+        , back_ { buffer[1] }
+    {
+    }
 
-    std::pair<T&, T&> get() {
+    std::pair<T&, T&> get()
+    {
         mutex_.lock();
         return { front_, back_ };
     }
 
     void unlock() { mutex_.unlock(); }
 
-    void swap() {
+    void swap()
+    {
         std::lock_guard<std::mutex> lock(mutex_);
         std::swap(front_, back_);
     }

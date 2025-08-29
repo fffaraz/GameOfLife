@@ -1,7 +1,7 @@
 #include <SFML/Graphics.hpp>
 
-#include "Grid.hpp"
 #include "DoubleBuffer.hpp"
+#include "Grid.hpp"
 
 #include <array>
 #include <atomic>
@@ -55,7 +55,7 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
         const int x = mousePos.x / CELL_SIZE;
         const int y = mousePos.y / CELL_SIZE;
         if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
-            currGrid.toggleBlock({x, y}); // Turn on a 3x3 block
+            currGrid.toggleBlock({ x, y }); // Turn on a 3x3 block
         }
     }
 
@@ -70,9 +70,10 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
     // Update the vertex array
     for (int i = 0; i < GRID_SIZE; ++i) {
         for (int j = 0; j < GRID_SIZE; ++j) {
-            const bool cellAlive = currGrid.get({i, j});
-            if (cellAlive) ++numAlive;
-            const sf::Color color = cellAlive ? getCellColor(currGrid.countLiveNeighbours({i, j})) : sf::Color::Black;
+            const bool cellAlive = currGrid.get({ i, j });
+            if (cellAlive)
+                ++numAlive;
+            const sf::Color color = cellAlive ? getCellColor(currGrid.countLiveNeighbours({ i, j })) : sf::Color::Black;
             const int index = (i * GRID_SIZE + j) * 6;
             vertices[index + 0].color = color;
             vertices[index + 1].color = color;
@@ -96,7 +97,7 @@ int main()
     std::cout << "SFML version: " << SFML_VERSION_MAJOR << "." << SFML_VERSION_MINOR << "." << SFML_VERSION_PATCH << "\n";
 
     // Create the main window
-    sf::RenderWindow window(sf::VideoMode({GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE}), "Conway's Game of Life");
+    sf::RenderWindow window(sf::VideoMode({ GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE }), "Conway's Game of Life");
     window.setFramerateLimit(100);
 
     // Vertex array for the grid
@@ -118,7 +119,7 @@ int main()
 
     // Text to display the number of alive cells
     sf::Font font;
-    const std::vector<std::string> fontPaths{
+    const std::vector<std::string> fontPaths {
         "/usr/share/fonts/gnu-free/FreeSans.ttf",
         "/usr/share/fonts/truetype/msttcorefonts/arial.ttf",
     };
@@ -130,7 +131,7 @@ int main()
 
     sf::Text text(font, "0", 24);
     text.setFillColor(sf::Color::White);
-    text.setPosition({10, 5});
+    text.setPosition({ 10, 5 });
     text.setOutlineThickness(2);
     text.setOutlineColor(sf::Color::Black);
 
