@@ -122,6 +122,7 @@ int main()
     const std::vector<std::string> fontPaths {
         "/usr/share/fonts/gnu-free/FreeSans.ttf",
         "/usr/share/fonts/truetype/msttcorefonts/arial.ttf",
+        "C:\\Windows\\Fonts\\Arial.ttf"
     };
     for (const auto& path : fontPaths) {
         if (font.openFromFile(path)) {
