@@ -94,6 +94,7 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
 int main()
 {
     std::cout << "Conway's Game of Life\n";
+    std::cout << "https://github.com/fffaraz/GameOfLife\n";
     std::cout << "SFML version: " << SFML_VERSION_MAJOR << "." << SFML_VERSION_MINOR << "." << SFML_VERSION_PATCH << "\n";
 
     // Create the main window
