@@ -121,9 +121,12 @@ int main()
     // Text to display the number of alive cells
     sf::Font font;
     const std::vector<std::string> fontPaths {
+#ifdef _WIN32
+        "C:\\Windows\\Fonts\\Arial.ttf",
+#else
         "/usr/share/fonts/gnu-free/FreeSans.ttf",
         "/usr/share/fonts/truetype/msttcorefonts/arial.ttf",
-        "C:\\Windows\\Fonts\\Arial.ttf"
+#endif
     };
     for (const auto& path : fontPaths) {
         if (font.openFromFile(path)) {
