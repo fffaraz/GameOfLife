@@ -3,10 +3,7 @@
 #include "DoubleBuffer.hpp"
 #include "Grid.hpp"
 
-#include <array>
-#include <atomic>
 #include <iostream>
-#include <mutex>
 #include <thread>
 
 constexpr int GRID_SIZE = 180; // Size of the grid in cells
@@ -106,8 +103,8 @@ int main()
     for (int i = 0; i < GRID_SIZE; ++i) {
         for (int j = 0; j < GRID_SIZE; ++j) {
             const int index = (i * GRID_SIZE + j) * 6;
-            const float x = i * CELL_SIZE;
-            const float y = j * CELL_SIZE;
+            const float x = (float) i * CELL_SIZE;
+            const float y = (float) j * CELL_SIZE;
 
             vertices[index + 0].position = sf::Vector2f(x, y);
             vertices[index + 1].position = sf::Vector2f(x + CELL_SIZE, y);
