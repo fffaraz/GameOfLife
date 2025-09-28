@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Utils.hpp"
-
 #include <array>
 
 struct Point {
@@ -58,6 +56,14 @@ void Grid<SIZE>::toggleBlock(const Point& p)
             }
         }
     }
+}
+
+// Function to apply the rules of Conway's Game of Life
+static inline bool gameOfLife(const bool cell, const int liveNeighbours)
+{
+    // A cell is alive in the next generation if it has 3 neighbours,
+    // or if it is currently alive and has 2 neighbours.
+    return liveNeighbours == 3 || (cell && liveNeighbours == 2);
 }
 
 // Function to update the grid based on the rules of Conway's Game of Life

@@ -21,5 +21,5 @@ FetchContent_Declare(
   GIT_TAG 3.0.x)
 FetchContent_MakeAvailable(SFML)
 
-add_executable(gameoflife main.cpp Grid.hpp DoubleBuffer.hpp Utils.hpp)
+add_executable(gameoflife main.cpp Grid.hpp DoubleBuffer.hpp)
 target_link_libraries(gameoflife PRIVATE sfml-graphics)
