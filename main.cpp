@@ -96,7 +96,7 @@ int main()
 
     // Create the main window
     sf::RenderWindow window(sf::VideoMode({ GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE }), "Conway's Game of Life");
-    window.setFramerateLimit(100);
+    window.setFramerateLimit(200);
 
     // Vertex array for the grid
     sf::VertexArray vertices(sf::PrimitiveType::Triangles, GRID_SIZE * GRID_SIZE * 6);
@@ -131,11 +131,18 @@ int main()
         }
     }
 
-    sf::Text text(font, "0", 24);
-    text.setFillColor(sf::Color::White);
-    text.setPosition({ 10, 5 });
-    text.setOutlineThickness(2);
-    text.setOutlineColor(sf::Color::Black);
+    sf::Text txtNumAlive(font, "0", 24);
+    txtNumAlive.setFillColor(sf::Color::White);
+    txtNumAlive.setPosition({ 10, 5 });
+    txtNumAlive.setOutlineThickness(2);
+    txtNumAlive.setOutlineColor(sf::Color::Black);
+
+    sf::Text txtFPS(font, "0", 24);
+    txtFPS.setFillColor(sf::Color::White);
+    txtFPS.setPosition({ (float)window.getSize().x - 100, 5 });
+    txtFPS.setOutlineThickness(2);
+    txtFPS.setOutlineColor(sf::Color::Black);
+    sf::Clock clock;
 
     // Start the grid update thread
     std::jthread updateThread([](std::stop_token stop_token) {
@@ -144,6 +151,8 @@ int main()
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
     });
+
+    int frameCount = 0;
 
     // Start the game loop
     while (window.isOpen()) {
@@ -160,14 +169,24 @@ int main()
 
         // Update the grid
         const int numAlive = updateVertices(window, vertices);
-        text.setString(std::to_string(numAlive));
+        txtNumAlive.setString(std::to_string(numAlive));
 
+        // Update FPS counter
+        frameCount++;
+        if (clock.getElapsedTime().asSeconds() >= 1.0f) {
+            const float fps = frameCount / clock.getElapsedTime().asSeconds();
+            txtFPS.setString("FPS: " + std::to_string(static_cast<int>(fps)));
+            frameCount = 0;
+            clock.restart();
+        }
+    
         // Clear the window
         window.clear();
 
-        // Draw the grid
+        // Draw the grid and texts
         window.draw(vertices);
-        window.draw(text);
+        window.draw(txtNumAlive);
+        window.draw(txtFPS);
 
         // Update the window
         window.display();
