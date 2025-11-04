@@ -29,6 +29,13 @@ public:
         return { buffer_[index_], buffer_[1 - index_],  std::move(lock) };
     }
 
+    void setAndSwap(T newData)
+    {
+        write_lock lock(mutex_);
+        buffer_[1 - index_] = std::move(newData);
+        index_ = 1 - index_;
+    }
+
     void swap()
     {
         write_lock lock(mutex_);

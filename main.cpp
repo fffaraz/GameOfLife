@@ -42,6 +42,42 @@ static void updateGrid(sf::RenderWindow& window)
     }
 }
 
+static void updateGrid2(sf::RenderWindow& window)
+{
+    Grid<GRID_SIZE> nextGrid;
+
+    // Handle right mouse button click
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) {
+        nextGrid.clear(); // Clear the grid
+        grid.setAndSwap(std::move(nextGrid));
+        return;
+    }
+
+    {
+        // Get the current grid and create a new next grid
+        const auto [currGrid, lock] = grid.readBuffer();
+
+        // Update the grid
+        nextGrid.update(currGrid);
+    }
+
+    // Add some noise to the grid
+    nextGrid.addNoise();
+
+    // Handle mouse movement while the left button is pressed
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+        const sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+        const int x = mousePos.x / CELL_SIZE;
+        const int y = mousePos.y / CELL_SIZE;
+        if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
+            nextGrid.toggleBlock({ x, y }); // Turn on a 3x3 block
+        }
+    }
+
+    // Swap the current and next grids
+    grid.setAndSwap(std::move(nextGrid));
+}
+
 inline sf::Color getCellColor(int liveNeighbours)
 {
     switch (liveNeighbours) {
@@ -141,11 +177,15 @@ int main()
     std::jthread updateThread([&window](std::stop_token stop_token) {
         while (!stop_token.stop_requested()) {
             const auto begin = std::chrono::high_resolution_clock::now();
+#if 0
             updateGrid(window);
+            grid.swap();
+#else
+            updateGrid2(window);
+#endif
             const auto end = std::chrono::high_resolution_clock::now();
             const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin);
-            std::cout << "Grid update took " << duration.count() << " milliseconds\n";
-            grid.swap();
+            if (0) std::cout << "Grid update took " << duration.count() << " milliseconds\n";
             if (0) std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
     });
@@ -177,7 +217,7 @@ int main()
             frameCount = 0;
             clock.restart();
         }
-    
+
         // Clear the window
         window.clear();
 
