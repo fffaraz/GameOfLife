@@ -1,6 +1,13 @@
 #pragma once
 
 #include <array>
+#include <numeric>
+
+#define PARALLEL 0
+
+#if PARALLEL
+#include <execution>
+#endif
 
 struct Point {
     const int x;
@@ -10,6 +17,7 @@ struct Point {
 template <int SIZE>
 class Grid {
 public:
+    Grid();
     int countLiveNeighbours(const Point& p) const;
     inline bool get(const Point& p) const { return grid_[index(p)]; }
     inline void set(const Point& p, bool value) { grid_[index(p)] = value; }
@@ -21,8 +29,16 @@ public:
 
 private:
     std::array<bool, SIZE * SIZE> grid_;
+    std::array<int, SIZE> indices;
     inline static int index(const Point& p) { return (p.x * SIZE) + p.y; }
 };
+
+// Constructor for the Grid class
+template <int SIZE>
+Grid<SIZE>::Grid()
+{
+    std::iota(indices.begin(), indices.end(), 0);
+}
 
 // Function to count the number of live neighbours for a cell at (x, y)
 template <int SIZE>
@@ -66,6 +82,23 @@ static inline bool gameOfLife(const bool cell, const int liveNeighbours)
     return liveNeighbours == 3 || (cell && liveNeighbours == 2);
 }
 
+#if PARALLEL
+
+// Parallel version of the update function
+template <int SIZE>
+void Grid<SIZE>::update(const Grid<SIZE>& current)
+{
+    std::for_each(std::execution::par, indices.begin(), indices.end(),
+        [&](int x) {
+            for (int y = 0; y < SIZE; ++y) {
+                const Point p{ x, y };
+                set(p, gameOfLife(current.get(p), current.countLiveNeighbours(p)));
+            }
+        });
+}
+
+#else
+
 // Function to update the grid based on the rules of Conway's Game of Life
 template <int SIZE>
 void Grid<SIZE>::update(const Grid<SIZE>& current)
@@ -77,6 +110,8 @@ void Grid<SIZE>::update(const Grid<SIZE>& current)
         }
     }
 }
+
+#endif
 
 // Function to add random noise to the grid
 template <int SIZE>

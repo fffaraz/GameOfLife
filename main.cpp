@@ -1,3 +1,6 @@
+// Conway's Game of Life
+// Copyright (c) 2025 Faraz Fallahi <fffaraz@gmail.com>
+
 #include <SFML/Graphics.hpp>
 
 #include "DoubleBuffer.hpp"
@@ -6,8 +9,8 @@
 #include <iostream>
 #include <thread>
 
-constexpr int GRID_SIZE = 180; // Size of the grid in cells
-constexpr int CELL_SIZE = 5; // Size of each cell in pixels
+constexpr int GRID_SIZE = 600; // Size of the grid in cells
+constexpr int CELL_SIZE = 1; // Size of each cell in pixels
 
 DoubleBuffer<Grid<GRID_SIZE>> grid;
 
@@ -24,6 +27,8 @@ static void updateGrid(sf::RenderWindow& window)
 
     // Update the grid
     nextGrid.update(currGrid);
+
+    // Add some noise to the grid
     nextGrid.addNoise();
 
     // Handle mouse movement while the left button is pressed
@@ -135,7 +140,11 @@ int main()
     // Start the grid update thread
     std::jthread updateThread([&window](std::stop_token stop_token) {
         while (!stop_token.stop_requested()) {
+            const auto begin = std::chrono::high_resolution_clock::now();
             updateGrid(window);
+            const auto end = std::chrono::high_resolution_clock::now();
+            const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin);
+            std::cout << "Grid update took " << duration.count() << " milliseconds\n";
             grid.swap();
             if (0) std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
