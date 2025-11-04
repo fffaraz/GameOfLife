@@ -1,33 +1,42 @@
 #pragma once
 
 #include <mutex>
+#include <shared_mutex>
 
 template <typename T>
 class DoubleBuffer {
 public:
-    DoubleBuffer()
-        : front_ { buffer[0] }
-        , back_ { buffer[1] }
+    DoubleBuffer() = default;
+
+    using read_lock = std::shared_lock<std::shared_mutex>;
+    using write_lock = std::unique_lock<std::shared_mutex>;
+
+    std::pair<const T&, read_lock> readBuffer() const
     {
+        read_lock lock(mutex_);
+        return { buffer_[index_], std::move(lock) };
     }
 
-    std::pair<T&, T&> get()
+    std::pair<T&, write_lock> writeBuffer()
     {
-        mutex_.lock();
-        return { front_, back_ };
+        write_lock lock(mutex_);
+        return { buffer_[1 - index_], std::move(lock) };
     }
 
-    void unlock() { mutex_.unlock(); }
+    std::tuple<const T&, T&, write_lock> buffers()
+    {
+        write_lock lock(mutex_);
+        return { buffer_[index_], buffer_[1 - index_],  std::move(lock) };
+    }
 
     void swap()
     {
-        std::lock_guard<std::mutex> lock(mutex_);
-        std::swap(front_, back_);
+        write_lock lock(mutex_);
+        index_ = 1 - index_;
     }
 
 private:
-    T buffer[2];
-    T& front_;
-    T& back_;
-    std::mutex mutex_;
+    T buffer_[2];
+    int index_ = 0;
+    mutable std::shared_mutex mutex_;
 };

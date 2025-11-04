@@ -11,18 +11,30 @@ constexpr int CELL_SIZE = 5; // Size of each cell in pixels
 
 DoubleBuffer<Grid<GRID_SIZE>> grid;
 
-static void updateGrid()
+static void updateGrid(sf::RenderWindow& window)
 {
     // Get the current grid and the next grid
-    auto [currGrid, nextGrid] = grid.get();
-    grid.unlock();
+    auto [currGrid, nextGrid, lock] = grid.buffers();
+
+    // Handle right mouse button click
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) {
+        nextGrid.clear(); // Clear the grid
+        return;
+    }
 
     // Update the grid
     nextGrid.update(currGrid);
     nextGrid.addNoise();
 
-    // Swap the grids
-    grid.swap();
+    // Handle mouse movement while the left button is pressed
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+        const sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+        const int x = mousePos.x / CELL_SIZE;
+        const int y = mousePos.y / CELL_SIZE;
+        if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
+            nextGrid.toggleBlock({ x, y }); // Turn on a 3x3 block
+        }
+    }
 }
 
 inline sf::Color getCellColor(int liveNeighbours)
@@ -44,32 +56,13 @@ inline sf::Color getCellColor(int liveNeighbours)
 // Function to update the vertex array and handle mouse input
 int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
 {
-    auto [currGrid, _] = grid.get();
-
-    // Handle mouse movement while the left button is pressed
-    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
-        const sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-        const int x = mousePos.x / CELL_SIZE;
-        const int y = mousePos.y / CELL_SIZE;
-        if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
-            currGrid.toggleBlock({ x, y }); // Turn on a 3x3 block
-        }
-    }
-
-    // Handle right mouse button click
-    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) {
-        currGrid.clear(); // Clear the grid
-    }
-
-    // Count the number of alive cells
-    int numAlive = 0;
-
+    int numAlive = 0; // Count the number of alive cells
+    auto [currGrid, lock] = grid.readBuffer();
     // Update the vertex array
     for (int i = 0; i < GRID_SIZE; ++i) {
         for (int j = 0; j < GRID_SIZE; ++j) {
             const bool cellAlive = currGrid.get({ i, j });
-            if (cellAlive)
-                ++numAlive;
+            numAlive += cellAlive ? 1 : 0;
             const sf::Color color = cellAlive ? getCellColor(currGrid.countLiveNeighbours({ i, j })) : sf::Color::Black;
             const int index = (i * GRID_SIZE + j) * 6;
             vertices[index + 0].color = color;
@@ -80,12 +73,7 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
             vertices[index + 5].color = color;
         }
     }
-
-    // Unlock the double buffer
-    grid.unlock();
-
-    // Return the number of alive cells
-    return numAlive;
+    return numAlive; // Return the number of alive cells
 }
 
 int main()
@@ -96,7 +84,7 @@ int main()
 
     // Create the main window
     sf::RenderWindow window(sf::VideoMode({ GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE }), "Conway's Game of Life");
-    window.setFramerateLimit(200);
+    window.setFramerateLimit(120);
 
     // Vertex array for the grid
     sf::VertexArray vertices(sf::PrimitiveType::Triangles, GRID_SIZE * GRID_SIZE * 6);
@@ -145,10 +133,11 @@ int main()
     sf::Clock clock;
 
     // Start the grid update thread
-    std::jthread updateThread([](std::stop_token stop_token) {
+    std::jthread updateThread([&window](std::stop_token stop_token) {
         while (!stop_token.stop_requested()) {
-            updateGrid();
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            updateGrid(window);
+            grid.swap();
+            if (0) std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
     });
 
