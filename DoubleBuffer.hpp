@@ -26,7 +26,7 @@ public:
     std::tuple<const T&, T&, write_lock> buffers()
     {
         write_lock lock(mutex_);
-        return { buffer_[index_], buffer_[1 - index_],  std::move(lock) };
+        return { buffer_[index_], buffer_[1 - index_], std::move(lock) };
     }
 
     void setAndSwap(T newData)

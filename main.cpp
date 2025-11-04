@@ -132,8 +132,8 @@ int main()
     for (int i = 0; i < GRID_SIZE; ++i) {
         for (int j = 0; j < GRID_SIZE; ++j) {
             const int index = (i * GRID_SIZE + j) * 6;
-            const float x = (float) i * CELL_SIZE;
-            const float y = (float) j * CELL_SIZE;
+            const float x = (float)i * CELL_SIZE;
+            const float y = (float)j * CELL_SIZE;
 
             vertices[index + 0].position = sf::Vector2f(x, y);
             vertices[index + 1].position = sf::Vector2f(x + CELL_SIZE, y);
@@ -185,8 +185,10 @@ int main()
 #endif
             const auto end = std::chrono::high_resolution_clock::now();
             const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin);
-            if (0) std::cout << "Grid update took " << duration.count() << " milliseconds\n";
-            if (0) std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            if (0)
+                std::cout << "Grid update took " << duration.count() << " milliseconds\n";
+            if (0)
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
     });
 
