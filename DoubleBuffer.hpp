@@ -40,6 +40,7 @@ public:
         swap(std::move(writeLock));
     }
 
+    // Swaps the read and write buffers using an existing write lock
     void swap(write_lock&& writeLock)
     {
         std::unique_lock<std::shared_mutex> readLock(readMutex_); // exclusive lock to prevent reads during swap
@@ -49,6 +50,6 @@ public:
 private:
     T buffer_[2];
     int index_ = 0; // read index (alternates between 0 and 1)
-    mutable std::mutex writeMutex_;
+    std::mutex writeMutex_;
     mutable std::shared_mutex readMutex_;
 };

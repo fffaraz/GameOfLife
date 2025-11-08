@@ -50,9 +50,7 @@ static void updateGrid(sf::RenderWindow& window)
     // Swap the buffers
     grid.swap(std::move(writeLock));
 }
-
 #else
-
 // Update the next grid by creating a new one and swapping
 static void updateGrid(sf::RenderWindow& window)
 {

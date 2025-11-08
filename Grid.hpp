@@ -76,23 +76,7 @@ static inline bool gameOfLife(const bool cell, const int liveNeighbours)
     return liveNeighbours == 3 || (cell && liveNeighbours == 2);
 }
 
-#ifdef PARALLEL_GRID
-
-// Parallel version of the update function
-template <int SIZE>
-void Grid<SIZE>::update(const Grid<SIZE>& current)
-{
-    // std::execution::par
-    std::for_each(poolstl::par, indices.begin(), indices.end(),
-        [&](int x) {
-            for (int y = 0; y < SIZE; ++y) {
-                const Point p { x, y };
-                set(p, gameOfLife(current.get(p), current.countLiveNeighbours(p)));
-            }
-        });
-}
-
-#else
+#ifndef PARALLEL_GRID
 
 // Function to update the grid based on the rules of Conway's Game of Life
 template <int SIZE>
@@ -104,6 +88,22 @@ void Grid<SIZE>::update(const Grid<SIZE>& current)
             set(p, gameOfLife(current.get(p), current.countLiveNeighbours(p)));
         }
     }
+}
+
+#else // PARALLEL_GRID
+
+// Parallel version of the update function
+template <int SIZE>
+void Grid<SIZE>::update(const Grid<SIZE>& current)
+{
+    // std::execution::par_unseq
+    std::for_each(poolstl::par, indices.begin(), indices.end(),
+        [&](int x) {
+            for (int y = 0; y < SIZE; ++y) {
+                const Point p { x, y };
+                set(p, gameOfLife(current.get(p), current.countLiveNeighbours(p)));
+            }
+        });
 }
 
 #endif
