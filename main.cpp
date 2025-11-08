@@ -9,12 +9,12 @@
 #include <iostream>
 #include <thread>
 
-constexpr int GRID_SIZE = 600; // Size of the grid in cells
+constexpr int GRID_SIZE = 512; // Size of the grid in cells
 constexpr int CELL_SIZE = 2; // Size of each cell in pixels
 
 DoubleBuffer<Grid<GRID_SIZE>> grid;
 
-#if 0
+#if 1
 // Update the next grid in place
 static void updateGrid(sf::RenderWindow& window)
 {
