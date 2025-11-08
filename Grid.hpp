@@ -5,6 +5,7 @@
 #if 1
 #include <execution>
 #include <numeric>
+#include <poolstl/poolstl.hpp>
 #define PARALLEL_GRID 1
 #endif
 
@@ -81,7 +82,8 @@ static inline bool gameOfLife(const bool cell, const int liveNeighbours)
 template <int SIZE>
 void Grid<SIZE>::update(const Grid<SIZE>& current)
 {
-    std::for_each(std::execution::par, indices.begin(), indices.end(),
+    // std::execution::par
+    std::for_each(poolstl::par, indices.begin(), indices.end(),
         [&](int x) {
             for (int y = 0; y < SIZE; ++y) {
                 const Point p { x, y };

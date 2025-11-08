@@ -15,11 +15,20 @@ endif()
 # sudo dnf install freetype-devel libvorbis-devel flac-devel systemd-devel # CSFML-devel
 
 include(FetchContent)
+
 FetchContent_Declare(
   SFML
   GIT_REPOSITORY https://github.com/SFML/SFML.git
   GIT_TAG 3.0.x)
 FetchContent_MakeAvailable(SFML)
 
+FetchContent_Declare(
+        poolSTL
+        GIT_REPOSITORY https://github.com/alugowski/poolSTL
+        GIT_TAG main
+        GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(poolSTL)
+
 add_executable(gameoflife main.cpp Grid.hpp DoubleBuffer.hpp)
-target_link_libraries(gameoflife PRIVATE sfml-graphics)
+target_link_libraries(gameoflife PRIVATE sfml-graphics poolSTL::poolSTL)
