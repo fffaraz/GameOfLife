@@ -19,15 +19,15 @@ include(FetchContent)
 FetchContent_Declare(
   SFML
   GIT_REPOSITORY https://github.com/SFML/SFML.git
-  GIT_TAG 3.0.x)
+  GIT_TAG 3.0.x
+  GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable(SFML)
 
 FetchContent_Declare(
-        poolSTL
-        GIT_REPOSITORY https://github.com/alugowski/poolSTL
-        GIT_TAG main
-        GIT_SHALLOW TRUE
-)
+  poolSTL
+  GIT_REPOSITORY https://github.com/alugowski/poolSTL
+  GIT_TAG main
+  GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable(poolSTL)
 
 add_executable(gameoflife main.cpp Grid.hpp DoubleBuffer.hpp)

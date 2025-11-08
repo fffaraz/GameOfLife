@@ -142,7 +142,7 @@ int main()
     sf::RenderWindow window(sf::VideoMode({ GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE }), "Conway's Game of Life");
     if (1)
     {
-        const int targetFPS = 10;
+        const int targetFPS = 30;
         window.setFramerateLimit(targetFPS);
         std::cout << "Target FPS: " << targetFPS << "\n";
     }
