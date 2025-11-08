@@ -23,7 +23,7 @@ public:
     inline void toggle(const Point& p) { const int idx = index(p); grid_[idx] = !grid_[idx]; }
     void toggleBlock(const Point& p);
     void update(const Grid<SIZE>& current);
-    void addNoise();
+    void addNoise(int n = 1);
     void clear();
 
 private:
@@ -110,9 +110,9 @@ void Grid<SIZE>::update(const Grid<SIZE>& current)
 
 // Function to add random noise to the grid
 template <int SIZE>
-void Grid<SIZE>::addNoise()
+void Grid<SIZE>::addNoise(int n)
 {
-    for (int i = 0; i < 1; ++i) {
+    for (int i = 0; i < n; ++i) {
         const int x = rand() % SIZE;
         const int y = rand() % SIZE;
         toggle({ x, y });
