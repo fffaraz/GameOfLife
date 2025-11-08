@@ -14,7 +14,7 @@ constexpr int CELL_SIZE = 2; // Size of each cell in pixels
 
 DoubleBuffer<Grid<GRID_SIZE>> grid;
 
-#if 1
+#if 0
 // Update the next grid in place
 static void updateGrid(sf::RenderWindow& window)
 {
@@ -134,10 +134,19 @@ int main()
     std::cout << "Conway's Game of Life\n";
     std::cout << "https://github.com/fffaraz/GameOfLife\n";
     std::cout << "SFML version: " << SFML_VERSION_MAJOR << "." << SFML_VERSION_MINOR << "." << SFML_VERSION_PATCH << "\n";
+    std::cout << "Grid size: " << GRID_SIZE << " x " << GRID_SIZE << "\n";
+    std::cout << "Cell size: " << CELL_SIZE << " pixels\n";
+    std::cout << "Hardware concurrency: " << std::thread::hardware_concurrency() << "\n";
 
     // Create the main window
     sf::RenderWindow window(sf::VideoMode({ GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE }), "Conway's Game of Life");
-    if (1) window.setFramerateLimit(120);
+    if (1)
+    {
+        const int targetFPS = 10;
+        window.setFramerateLimit(targetFPS);
+        std::cout << "Target FPS: " << targetFPS << "\n";
+    }
+    std::cout.flush();
 
     // Vertex array for the grid
     sf::VertexArray vertices(sf::PrimitiveType::Triangles, GRID_SIZE * GRID_SIZE * 6);
@@ -179,7 +188,7 @@ int main()
 
     sf::Text txtFPS(font, "", 24);
     txtFPS.setFillColor(sf::Color::White);
-    txtFPS.setPosition({ (float)window.getSize().x - 100, 5 });
+    txtFPS.setPosition({ (float)window.getSize().x - 200, 5 });
     txtFPS.setOutlineThickness(2);
     txtFPS.setOutlineColor(sf::Color::Black);
 
@@ -224,8 +233,9 @@ int main()
         frameCount++;
         if (fpsClock.getElapsedTime().asSeconds() >= 1.0f) {
             const float fps = frameCount / fpsClock.getElapsedTime().asSeconds();
-            txtFPS.setString("FPS: " + std::to_string(static_cast<int>(fps)) +
-                             "\nEPS: " + std::to_string(static_cast<int>(epochsPerSecond.load())));
+            char buffer[50];
+            snprintf(buffer, sizeof(buffer), "FPS: %.2f\nEPS: %.2f", fps, epochsPerSecond.load());
+            txtFPS.setString(buffer);
             frameCount = 0;
             fpsClock.restart();
         }
