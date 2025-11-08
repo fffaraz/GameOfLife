@@ -14,7 +14,7 @@ constexpr int CELL_SIZE = 1; // Size of each cell in pixels
 
 DoubleBuffer<Grid<GRID_SIZE>> grid;
 
-#if 1
+#if 0
 // Update the next grid in place
 static void updateGrid(sf::RenderWindow& window)
 {
@@ -31,7 +31,6 @@ static void updateGrid(sf::RenderWindow& window)
     // Get the current grid and update nextGrid - scope ensures readLock is released
     {
         const auto [currGrid, readLock] = grid.readBuffer();
-        // Update the grid
         nextGrid.update(currGrid);
     }
 
@@ -48,6 +47,7 @@ static void updateGrid(sf::RenderWindow& window)
         }
     }
 
+    // Swap the buffers
     grid.swap(std::move(writeLock));
 }
 
@@ -65,11 +65,9 @@ static void updateGrid(sf::RenderWindow& window)
         return;
     }
 
+    // Get the current grid and update nextGrid - scope ensures readLock is released
     {
-        // Get the current grid and create a new next grid
-        const auto [currGrid, lock] = grid.readBuffer();
-
-        // Update the grid
+        const auto [currGrid, readLock] = grid.readBuffer();
         nextGrid.update(currGrid);
     }
 
@@ -86,7 +84,7 @@ static void updateGrid(sf::RenderWindow& window)
         }
     }
 
-    // Swap the current and next grids
+    // Set the new grid and swap the buffers
     grid.setAndSwap(std::move(nextGrid));
 }
 #endif
