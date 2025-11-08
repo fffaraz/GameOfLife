@@ -18,7 +18,7 @@ DoubleBuffer<Grid<GRID_SIZE>> grid;
 // Update the next grid in place
 static void updateGrid(sf::RenderWindow& window)
 {
-    // Get the next grid
+    // Get the next grid to write to
     auto [nextGrid, writeLock] = grid.writeBuffer();
 
     // Handle right mouse button click
@@ -28,11 +28,12 @@ static void updateGrid(sf::RenderWindow& window)
         return;
     }
 
-    // Get the current grid
-    const auto [currGrid, readLock] = grid.readBuffer();
-
-    // Update the grid
-    nextGrid.update(currGrid);
+    // Get the current grid and update nextGrid - scope ensures readLock is released
+    {
+        const auto [currGrid, readLock] = grid.readBuffer();
+        // Update the grid
+        nextGrid.update(currGrid);
+    }
 
     // Add some noise to the grid
     nextGrid.addNoise();
