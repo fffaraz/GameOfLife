@@ -10,11 +10,11 @@
 #include <thread>
 
 constexpr int GRID_SIZE = 600; // Size of the grid in cells
-constexpr int CELL_SIZE = 1; // Size of each cell in pixels
+constexpr int CELL_SIZE = 2; // Size of each cell in pixels
 
 DoubleBuffer<Grid<GRID_SIZE>> grid;
 
-#if 0
+#if 1
 // Update the next grid in place
 static void updateGrid(sf::RenderWindow& window)
 {
@@ -137,7 +137,7 @@ int main()
 
     // Create the main window
     sf::RenderWindow window(sf::VideoMode({ GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE }), "Conway's Game of Life");
-    if (0) window.setFramerateLimit(120);
+    if (1) window.setFramerateLimit(120);
 
     // Vertex array for the grid
     sf::VertexArray vertices(sf::PrimitiveType::Triangles, GRID_SIZE * GRID_SIZE * 6);
@@ -146,7 +146,6 @@ int main()
             const int index = (i * GRID_SIZE + j) * 6;
             const float x = (float)i * CELL_SIZE;
             const float y = (float)j * CELL_SIZE;
-
             vertices[index + 0].position = sf::Vector2f(x, y);
             vertices[index + 1].position = sf::Vector2f(x + CELL_SIZE, y);
             vertices[index + 2].position = sf::Vector2f(x + CELL_SIZE, y + CELL_SIZE);
