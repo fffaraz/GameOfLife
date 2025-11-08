@@ -42,7 +42,7 @@ public:
 
     void swap(write_lock&& writeLock)
     {
-        std::unique_lock readLock(readMutex_); // exclusive lock to prevent reads during swap
+        std::unique_lock<std::shared_mutex> readLock(readMutex_); // exclusive lock to prevent reads during swap
         index_ = 1 - index_;
     }
 

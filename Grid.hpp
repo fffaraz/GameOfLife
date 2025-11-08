@@ -2,7 +2,7 @@
 
 #include <array>
 
-#if 1
+#if 0
 #include <execution>
 #include <numeric>
 #define PARALLEL_GRID 1

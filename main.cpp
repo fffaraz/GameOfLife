@@ -173,13 +173,13 @@ int main()
         }
     }
 
-    sf::Text txtNumAlive(font, "0", 24);
+    sf::Text txtNumAlive(font, "", 24);
     txtNumAlive.setFillColor(sf::Color::White);
     txtNumAlive.setPosition({ 10, 5 });
     txtNumAlive.setOutlineThickness(2);
     txtNumAlive.setOutlineColor(sf::Color::Black);
 
-    sf::Text txtFPS(font, "0", 24);
+    sf::Text txtFPS(font, "", 24);
     txtFPS.setFillColor(sf::Color::White);
     txtFPS.setPosition({ (float)window.getSize().x - 100, 5 });
     txtFPS.setOutlineThickness(2);
@@ -191,17 +191,13 @@ int main()
         sf::Clock epochClock;
         int epochCount = 0;
         while (!stop_token.stop_requested()) {
-            const auto begin = std::chrono::high_resolution_clock::now();
             updateGrid(window);
-            const auto end = std::chrono::high_resolution_clock::now();
-            const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - begin);
             epochCount++;
             if (epochClock.getElapsedTime().asSeconds() >= 1.0f) {
                 epochsPerSecond = epochCount / epochClock.getElapsedTime().asSeconds();
                 epochCount = 0;
                 epochClock.restart();
             }
-            if (1) std::cout << "Grid update took " << duration.count() << " microseconds\n";
         }
     });
 
@@ -224,7 +220,7 @@ int main()
 
         // Update the grid
         const int numAlive = updateVertices(window, vertices);
-        txtNumAlive.setString(std::to_string(numAlive));
+        txtNumAlive.setString("Alive: " + std::to_string(numAlive));
 
         // Update FPS counter
         frameCount++;
