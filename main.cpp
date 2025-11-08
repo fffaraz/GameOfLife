@@ -14,16 +14,22 @@ constexpr int CELL_SIZE = 1; // Size of each cell in pixels
 
 DoubleBuffer<Grid<GRID_SIZE>> grid;
 
+#if 1
+// Update the next grid in place
 static void updateGrid(sf::RenderWindow& window)
 {
-    // Get the current grid and the next grid
-    auto [currGrid, nextGrid, lock] = grid.buffers();
+    // Get the next grid
+    auto [nextGrid, writeLock] = grid.writeBuffer();
 
     // Handle right mouse button click
     if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) {
         nextGrid.clear(); // Clear the grid
+        grid.swap(std::move(writeLock));
         return;
     }
+
+    // Get the current grid
+    const auto [currGrid, readLock] = grid.readBuffer();
 
     // Update the grid
     nextGrid.update(currGrid);
@@ -40,9 +46,14 @@ static void updateGrid(sf::RenderWindow& window)
             nextGrid.toggleBlock({ x, y }); // Turn on a 3x3 block
         }
     }
+
+    grid.swap(std::move(writeLock));
 }
 
-static void updateGrid2(sf::RenderWindow& window)
+#else
+
+// Update the next grid by creating a new one and swapping
+static void updateGrid(sf::RenderWindow& window)
 {
     Grid<GRID_SIZE> nextGrid;
 
@@ -77,7 +88,9 @@ static void updateGrid2(sf::RenderWindow& window)
     // Swap the current and next grids
     grid.setAndSwap(std::move(nextGrid));
 }
+#endif
 
+// Returns cell color based on the number of live neighbours
 inline sf::Color getCellColor(int liveNeighbours)
 {
     switch (liveNeighbours) {
@@ -94,7 +107,7 @@ inline sf::Color getCellColor(int liveNeighbours)
     }
 }
 
-// Function to update the vertex array and handle mouse input
+// Function to update the vertex array
 int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
 {
     int numAlive = 0; // Count the number of alive cells
@@ -125,7 +138,7 @@ int main()
 
     // Create the main window
     sf::RenderWindow window(sf::VideoMode({ GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE }), "Conway's Game of Life");
-    window.setFramerateLimit(120);
+    if (0) window.setFramerateLimit(120);
 
     // Vertex array for the grid
     sf::VertexArray vertices(sf::PrimitiveType::Triangles, GRID_SIZE * GRID_SIZE * 6);
@@ -171,27 +184,29 @@ int main()
     txtFPS.setPosition({ (float)window.getSize().x - 100, 5 });
     txtFPS.setOutlineThickness(2);
     txtFPS.setOutlineColor(sf::Color::Black);
-    sf::Clock clock;
 
     // Start the grid update thread
-    std::jthread updateThread([&window](std::stop_token stop_token) {
+    std::atomic<float> epochsPerSecond = 0.0f;
+    std::jthread updateThread([&window, &epochsPerSecond](std::stop_token stop_token) {
+        sf::Clock epochClock;
+        int epochCount = 0;
         while (!stop_token.stop_requested()) {
             const auto begin = std::chrono::high_resolution_clock::now();
-#if 0
             updateGrid(window);
-            grid.swap();
-#else
-            updateGrid2(window);
-#endif
             const auto end = std::chrono::high_resolution_clock::now();
-            const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin);
-            if (0)
-                std::cout << "Grid update took " << duration.count() << " milliseconds\n";
-            if (0)
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - begin);
+            epochCount++;
+            if (epochClock.getElapsedTime().asSeconds() >= 1.0f) {
+                epochsPerSecond = epochCount / epochClock.getElapsedTime().asSeconds();
+                epochCount = 0;
+                epochClock.restart();
+            }
+            if (1) std::cout << "Grid update took " << duration.count() << " microseconds\n";
         }
     });
 
+    // Clock for FPS calculation
+    sf::Clock fpsClock;
     int frameCount = 0;
 
     // Start the game loop
@@ -213,11 +228,12 @@ int main()
 
         // Update FPS counter
         frameCount++;
-        if (clock.getElapsedTime().asSeconds() >= 1.0f) {
-            const float fps = frameCount / clock.getElapsedTime().asSeconds();
-            txtFPS.setString("FPS: " + std::to_string(static_cast<int>(fps)));
+        if (fpsClock.getElapsedTime().asSeconds() >= 1.0f) {
+            const float fps = frameCount / fpsClock.getElapsedTime().asSeconds();
+            txtFPS.setString("FPS: " + std::to_string(static_cast<int>(fps)) +
+                             "\nEPS: " + std::to_string(static_cast<int>(epochsPerSecond.load())));
             frameCount = 0;
-            clock.restart();
+            fpsClock.restart();
         }
 
         // Clear the window

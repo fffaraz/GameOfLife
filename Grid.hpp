@@ -1,12 +1,11 @@
 #pragma once
 
 #include <array>
-#include <numeric>
 
-#define PARALLEL 0
-
-#if PARALLEL
+#if 1
 #include <execution>
+#include <numeric>
+#define PARALLEL_GRID 1
 #endif
 
 struct Point {
@@ -17,11 +16,10 @@ struct Point {
 template <int SIZE>
 class Grid {
 public:
-    Grid();
     int countLiveNeighbours(const Point& p) const;
     inline bool get(const Point& p) const { return grid_[index(p)]; }
-    inline void set(const Point& p, bool value) { grid_[index(p)] = value; }
-    inline void toggle(const Point& p) { grid_[index(p)] = !grid_[index(p)]; }
+    inline void set(const Point& p, const bool value) { grid_[index(p)] = value; }
+    inline void toggle(const Point& p) { const int idx = index(p); grid_[idx] = !grid_[idx]; }
     void toggleBlock(const Point& p);
     void update(const Grid<SIZE>& current);
     void addNoise();
@@ -29,16 +27,11 @@ public:
 
 private:
     std::array<bool, SIZE * SIZE> grid_;
-    std::array<int, SIZE> indices;
     inline static int index(const Point& p) { return (p.x * SIZE) + p.y; }
+#ifdef PARALLEL_GRID
+    static constexpr std::array<int, SIZE> indices = [](){ std::array<int, SIZE> v; std::iota(v.begin(), v.end(), 0); return v; }();
+#endif
 };
-
-// Constructor for the Grid class
-template <int SIZE>
-Grid<SIZE>::Grid()
-{
-    std::iota(indices.begin(), indices.end(), 0);
-}
 
 // Function to count the number of live neighbours for a cell at (x, y)
 template <int SIZE>
@@ -82,7 +75,7 @@ static inline bool gameOfLife(const bool cell, const int liveNeighbours)
     return liveNeighbours == 3 || (cell && liveNeighbours == 2);
 }
 
-#if PARALLEL
+#ifdef PARALLEL_GRID
 
 // Parallel version of the update function
 template <int SIZE>
