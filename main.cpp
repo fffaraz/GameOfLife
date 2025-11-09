@@ -25,9 +25,7 @@ static void updateGrid(const sf::RenderWindow& window)
     auto [nextGrid, writeLock] = grid.writeBuffer();
 
     // Handle right mouse button click
-    // sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)
     if (mouseRightPressed.load()) {
-        mouseRightPressed.store(false); // Reset the flag
         nextGrid.clear(); // Clear the grid
         grid.swap(std::move(writeLock));
         return;
@@ -43,9 +41,7 @@ static void updateGrid(const sf::RenderWindow& window)
     nextGrid.addNoise();
 
     // Handle mouse movement while the left button is pressed
-    // sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)
     if (mouseLeftPressed.load()) {
-        mouseLeftPressed.store(false); // Reset the flag
         const sf::Vector2i mousePos = sf::Mouse::getPosition(window);
         const int x = mousePos.x / CELL_SIZE;
         const int y = mousePos.y / CELL_SIZE;
@@ -64,7 +60,7 @@ static void updateGrid(sf::RenderWindow& window)
     Grid<GRID_SIZE> nextGrid;
 
     // Handle right mouse button click
-    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) {
+    if (mouseRightPressed.load()) {
         nextGrid.clear(); // Clear the grid
         grid.setAndSwap(std::move(nextGrid));
         return;
@@ -80,7 +76,7 @@ static void updateGrid(sf::RenderWindow& window)
     nextGrid.addNoise();
 
     // Handle mouse movement while the left button is pressed
-    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+    if (mouseLeftPressed.load()) {
         const sf::Vector2i mousePos = sf::Mouse::getPosition(window);
         const int x = mousePos.x / CELL_SIZE;
         const int y = mousePos.y / CELL_SIZE;
@@ -235,11 +231,17 @@ int main()
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Escape) {
                     window.close();
                 }
-            } else if (const auto* mouseClicked = event->getIf<sf::Event::MouseButtonPressed>()) {
-                if (mouseClicked->button == sf::Mouse::Button::Left) {
+            } else if (const auto* mousePressed = event->getIf<sf::Event::MouseButtonPressed>()) {
+                if (mousePressed->button == sf::Mouse::Button::Left) {
                     mouseLeftPressed.store(true);
-                } else if (mouseClicked->button == sf::Mouse::Button::Right) {
+                } else if (mousePressed->button == sf::Mouse::Button::Right) {
                     mouseRightPressed.store(true);
+                }
+            } else if (const auto* mouseReleased = event->getIf<sf::Event::MouseButtonReleased>()) {
+                if (mouseReleased->button == sf::Mouse::Button::Left) {
+                    mouseLeftPressed.store(false);
+                } else if (mouseReleased->button == sf::Mouse::Button::Right) {
+                    mouseRightPressed.store(false);
                 }
             }
         }
