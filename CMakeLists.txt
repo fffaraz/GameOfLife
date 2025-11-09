@@ -5,9 +5,10 @@ project(gameoflife LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(BUILD_SHARED_LIBS OFF)
+set(SFML_USE_STATIC_STD_LIBS ON)
 
 if (NOT MSVC AND CMAKE_BUILD_TYPE STREQUAL "Release")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -static-libgcc -static-libstdc++ -funroll-loops -O3")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -funroll-loops -march=native -mtune=native")
 endif()
 
 # SFML dependencies:
