@@ -1,7 +1,7 @@
 #pragma once
 
 #include <array>
-#include <cstdlib>
+#include <random>
 
 #if 1
 #include <execution>
@@ -131,13 +131,16 @@ void Grid<SIZE>::update(const Grid<SIZE>& current)
 
 #endif
 
+static std::mt19937 generator(0);
+static std::uniform_int_distribution<int> distribution(0, 2'000'000'000);
+
 // Function to add random noise to the grid
 template <int SIZE>
 void Grid<SIZE>::addNoise(int n)
 {
     for (int i = 0; i < n; ++i) {
-        const int x = rand() % SIZE;
-        const int y = rand() % SIZE;
+        const int x = distribution(generator) % SIZE;
+        const int y = distribution(generator) % SIZE;
         toggle({ x, y });
     }
 }
