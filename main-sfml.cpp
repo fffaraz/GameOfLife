@@ -12,8 +12,7 @@
 std::atomic_bool mouseRightPressed = false;
 std::atomic_bool mouseLeftPressed = false;
 
-#if 1
-// Update the next grid in place
+// Update the next grid
 static void updateGrid(const sf::RenderWindow& window)
 {
     // Get the next grid to write to
@@ -48,42 +47,6 @@ static void updateGrid(const sf::RenderWindow& window)
     // Swap the buffers
     grid.swap(std::move(writeLock));
 }
-#else
-// Update the next grid by creating a new one and swapping
-static void updateGrid(sf::RenderWindow& window)
-{
-    Grid<GRID_SIZE> nextGrid;
-
-    // Handle right mouse button click
-    if (mouseRightPressed.load()) {
-        nextGrid.clear(); // Clear the grid
-        grid.setAndSwap(std::move(nextGrid));
-        return;
-    }
-
-    // Get the current grid and update nextGrid - scope ensures readLock is released
-    {
-        const auto [currGrid, readLock] = grid.readBuffer();
-        nextGrid.update(currGrid);
-    }
-
-    // Add some noise to the grid
-    nextGrid.addNoise();
-
-    // Handle mouse movement while the left button is pressed
-    if (mouseLeftPressed.load()) {
-        const sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-        const int x = mousePos.x / CELL_SIZE;
-        const int y = mousePos.y / CELL_SIZE;
-        if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
-            nextGrid.toggleBlock({ x, y }); // Turn on a 3x3 block
-        }
-    }
-
-    // Set the new grid and swap the buffers
-    grid.setAndSwap(std::move(nextGrid));
-}
-#endif
 
 // Returns cell color based on the number of live neighbours
 inline sf::Color getCellColor(int liveNeighbours)
@@ -110,11 +73,7 @@ inline sf::Color getCellColor(int liveNeighbours)
 int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
 {
     int numAlive = 0; // Count the number of alive cells
-#if 1
     auto [currGrid, lock] = grid.readBuffer();
-#else
-    const auto currGrid = grid.clone();
-#endif
     for (int i = 0; i < GRID_SIZE; ++i) {
         for (int j = 0; j < GRID_SIZE; ++j) {
             const Point p { i, j };
