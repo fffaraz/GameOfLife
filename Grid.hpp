@@ -3,7 +3,7 @@
 #include <array>
 #include <random>
 
-#if 0 // Enable multi-threaded calculation for the grid updates
+#if 1 // Enable multi-threaded calculation for the grid updates
 #include <numeric>
 #include <poolstl/poolstl.hpp>
 #define PARALLEL_GRID 1
