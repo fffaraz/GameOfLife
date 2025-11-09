@@ -44,8 +44,6 @@ static void updateGrid(const sf::RenderWindow& window)
         }
     }
 
-    nextGrid.updateNeighbors();
-
     // Swap the buffers
     grid.swap(std::move(writeLock));
 }
@@ -81,7 +79,11 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
             const Point p { i, j };
             const bool cellAlive = currGrid.get(p);
             numAlive += cellAlive ? 1 : 0;
-            const sf::Color color = cellAlive ? getCellColor(currGrid.neighbors(p)) : sf::Color::Black;
+#if 0
+            const sf::Color color = cellAlive ? getCellColor(currGrid.countLiveNeighbors(p)) : sf::Color::Black;
+#else
+            const sf::Color color = cellAlive ? sf::Color::White : sf::Color::Black;
+#endif
             if (CELL_SIZE == 1) {
                 const int index = (i * GRID_SIZE) + j;
                 vertices[index].color = color;

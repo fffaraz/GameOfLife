@@ -4,9 +4,9 @@
 #include <iostream>
 #include <thread>
 
-constexpr int GRID_SIZE = 1024; // Size of the grid in cells
+constexpr int GRID_SIZE = 512; // Size of the grid in cells
 constexpr int CELL_SIZE = 1; // Size of each cell in pixels
-constexpr int targetFPS = 60;
+constexpr int targetFPS = 30;
 
 DoubleBuffer<Grid<GRID_SIZE>> grid;
 
