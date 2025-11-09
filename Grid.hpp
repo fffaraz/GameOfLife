@@ -22,7 +22,6 @@ public:
     inline void set(const Point& p, const bool value) { grid_[index(p)] = value; }
     inline void toggle(const Point& p) { const int idx = index(p); grid_[idx] = !grid_[idx]; }
     inline int neighbors(const Point& p) const { return neighbors_[index(p)]; }
-    inline int neighbors(const int idx) const { return neighbors_[idx]; }
     void toggleBlock(const Point& p);
     void updateGrid(const Grid<SIZE>& current);
     void updateNeighbors();
@@ -99,7 +98,7 @@ template <int SIZE>
 void Grid<SIZE>::update(const Grid<SIZE>& current, const Point& p)
 {
     const int idx = index(p);
-    const int live = current.neighbors(idx);
+    const int live = current.neighbors_[idx];
     grid_[idx] = gameOfLife(current.grid_[idx], live);
 }
 
