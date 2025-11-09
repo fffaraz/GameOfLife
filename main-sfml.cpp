@@ -79,7 +79,7 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
             const Point p { i, j };
             const bool cellAlive = currGrid.get(p);
             numAlive += cellAlive ? 1 : 0;
-#if 0
+#if 0 // Enable to color cells based on live neighbors
             const sf::Color color = cellAlive ? getCellColor(currGrid.countLiveNeighbors(p)) : sf::Color::Black;
 #else
             const sf::Color color = cellAlive ? sf::Color::White : sf::Color::Black;
@@ -226,7 +226,7 @@ int main()
             const float eps = epochsPerSecond.load();
             const float cups = eps * (GRID_SIZE * GRID_SIZE / 1'000'000'000.0);
             char buffer[50];
-            snprintf(buffer, sizeof(buffer), "FPS: %.2f\nEPS: %.2f\nCUpS: %.2fe9", fps, eps, cups);
+            snprintf(buffer, sizeof(buffer), "FPS: %.2f\nEPS: %.2f\nCUpS: %.3fe9", fps, eps, cups);
             txtFPS.setString(buffer);
             frameCount = 0;
             fpsClock.restart();
