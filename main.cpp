@@ -158,7 +158,7 @@ int main()
     sf::VertexArray vertices(sf::PrimitiveType::Triangles, GRID_SIZE * GRID_SIZE * 6);
     for (int i = 0; i < GRID_SIZE; ++i) {
         for (int j = 0; j < GRID_SIZE; ++j) {
-            const int index = (i * GRID_SIZE + j) * 6;
+            const int index = ((i * GRID_SIZE) + j) * 6;
             const float x = (float)i * CELL_SIZE;
             const float y = (float)j * CELL_SIZE;
             vertices[index + 0].position = sf::Vector2f(x, y);
