@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cstdlib>
 
 #if 1
 #include <execution>
@@ -21,6 +22,7 @@ public:
     inline bool get(const Point& p) const { return grid_[index(p)]; }
     inline void set(const Point& p, const bool value) { grid_[index(p)] = value; }
     inline void toggle(const Point& p) { const int idx = index(p); grid_[idx] = !grid_[idx]; }
+    // inline uint8_t neighbors(const Point& p) const { return neighbors_[index(p)]; }
     void toggleBlock(const Point& p);
     void update(const Grid<SIZE>& current);
     void addNoise(int n = 1);
@@ -28,6 +30,7 @@ public:
 
 private:
     std::array<bool, SIZE * SIZE> grid_;
+    // std::array<uint8_t, SIZE * SIZE> neighbors_;
     inline static int index(const Point& p) { return (p.x * SIZE) + p.y; }
 #ifdef PARALLEL_GRID
     static constexpr std::array<int, SIZE> indices = [](){ std::array<int, SIZE> v; std::iota(v.begin(), v.end(), 0); return v; }();
@@ -85,7 +88,10 @@ void Grid<SIZE>::update(const Grid<SIZE>& current)
     for (int x = 0; x < SIZE; ++x) {
         for (int y = 0; y < SIZE; ++y) {
             const Point p { x, y };
-            set(p, gameOfLife(current.get(p), current.countLiveNeighbours(p)));
+            const int idx = index(p);
+            const int live = current.countLiveNeighbours(p);
+            grid_[idx] = gameOfLife(current.grid_[idx], live);
+            // neighbors_[idx] = live;
         }
     }
 }
@@ -101,7 +107,10 @@ void Grid<SIZE>::update(const Grid<SIZE>& current)
         [&](int x) {
             for (int y = 0; y < SIZE; ++y) {
                 const Point p { x, y };
-                set(p, gameOfLife(current.get(p), current.countLiveNeighbours(p)));
+                const int idx = index(p);
+                const int live = current.countLiveNeighbours(p);
+                grid_[idx] = gameOfLife(current.grid_[idx], live);
+                // neighbors_[idx] = live;
             }
         });
 }
