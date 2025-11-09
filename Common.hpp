@@ -2,6 +2,7 @@
 #include "Grid.hpp"
 
 #include <iostream>
+#include <thread>
 
 constexpr int GRID_SIZE = 1024; // Size of the grid in cells
 constexpr int CELL_SIZE = 1; // Size of each cell in pixels

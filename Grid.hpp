@@ -148,7 +148,7 @@ template <int SIZE>
 void Grid<SIZE>::updateNeighbors()
 {
     std::for_each(poolstl::par.on(threadPool), indices.begin(), indices.end(),
-        [&](int x) {
+        [this](int x) {
             for (int y = 0; y < SIZE; ++y) {
                 const Point p { x, y };
                 neighbors_[index(p)] = countLiveNeighbors(p);
