@@ -3,13 +3,25 @@
 #include <mutex>
 #include <shared_mutex>
 
+#if 1
+using WriteMutex = std::mutex;
+#else
+class FakeMutex {
+public:
+    void lock() {}
+    void unlock() {}
+    bool try_lock() { return true; }
+};
+using WriteMutex = FakeMutex;
+#endif
+
 template <typename T>
 class DoubleBuffer {
 public:
     DoubleBuffer() = default;
 
     using read_lock = std::shared_lock<std::shared_mutex>;
-    using write_lock = std::unique_lock<std::mutex>;
+    using write_lock = std::unique_lock<WriteMutex>;
 
     // Returns a const reference to the current read buffer along with a read lock
     std::pair<const T&, read_lock> readBuffer() const
@@ -50,6 +62,6 @@ public:
 private:
     T buffer_[2];
     int index_ = 0; // read index (alternates between 0 and 1)
-    std::mutex writeMutex_;
+    WriteMutex writeMutex_;
     mutable std::shared_mutex readMutex_;
 };

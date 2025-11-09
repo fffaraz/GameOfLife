@@ -146,7 +146,7 @@ int main()
     {
         const int targetFPS = 30;
         window.setFramerateLimit(targetFPS);
-        std::cout << "Target FPS: " << targetFPS << "\n";
+        std::cout << "Framerate Limit: " << targetFPS << "\n";
     }
     std::cout.flush();
 
