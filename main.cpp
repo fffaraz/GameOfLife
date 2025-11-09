@@ -14,6 +14,9 @@ constexpr int CELL_SIZE = 2; // Size of each cell in pixels
 
 DoubleBuffer<Grid<GRID_SIZE>> grid;
 
+std::atomic_bool mouseRightPressed = false;
+std::atomic_bool mouseLeftPressed = false;
+
 #if 1
 // Update the next grid in place
 static void updateGrid(const sf::RenderWindow& window)
@@ -22,7 +25,9 @@ static void updateGrid(const sf::RenderWindow& window)
     auto [nextGrid, writeLock] = grid.writeBuffer();
 
     // Handle right mouse button click
-    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) {
+    // sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)
+    if (mouseRightPressed.load()) {
+        mouseRightPressed.store(false); // Reset the flag
         nextGrid.clear(); // Clear the grid
         grid.swap(std::move(writeLock));
         return;
@@ -38,7 +43,9 @@ static void updateGrid(const sf::RenderWindow& window)
     nextGrid.addNoise();
 
     // Handle mouse movement while the left button is pressed
-    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+    // sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)
+    if (mouseLeftPressed.load()) {
+        mouseLeftPressed.store(false); // Reset the flag
         const sf::Vector2i mousePos = sf::Mouse::getPosition(window);
         const int x = mousePos.x / CELL_SIZE;
         const int y = mousePos.y / CELL_SIZE;
@@ -227,6 +234,12 @@ int main()
             } else if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>()) {
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Escape) {
                     window.close();
+                }
+            } else if (const auto* mouseClicked = event->getIf<sf::Event::MouseButtonPressed>()) {
+                if (mouseClicked->button == sf::Mouse::Button::Left) {
+                    mouseLeftPressed.store(true);
+                } else if (mouseClicked->button == sf::Mouse::Button::Right) {
+                    mouseRightPressed.store(true);
                 }
             }
         }
