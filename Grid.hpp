@@ -22,6 +22,7 @@ public:
     inline void set(const Point& p, const bool value) { grid_[index(p)] = value; }
     inline void toggle(const Point& p) { const int idx = index(p); grid_[idx] = !grid_[idx]; }
     inline int neighbors(const Point& p) const { return neighbors_[index(p)]; }
+    inline int neighbors(const int idx) const { return neighbors_[idx]; }
     void toggleBlock(const Point& p);
     void updateGrid(const Grid<SIZE>& current);
     void updateNeighbors();
@@ -31,7 +32,7 @@ public:
 private:
     std::array<bool, SIZE * SIZE> grid_;
     std::array<uint8_t, SIZE * SIZE> neighbors_;
-    inline void updateGrid(const Grid<SIZE>& current, const Point& p);
+    inline void update(const Grid<SIZE>& current, const Point& p);
     inline static int index(const Point& p) { return (p.x * SIZE) + p.y; }
     int countLiveNeighbors(const Point& p) const;
 #ifdef PARALLEL_GRID
@@ -95,10 +96,10 @@ static inline bool gameOfLife(const bool cell, const int liveNeighbors)
 }
 
 template <int SIZE>
-void Grid<SIZE>::updateGrid(const Grid<SIZE>& current, const Point& p)
+void Grid<SIZE>::update(const Grid<SIZE>& current, const Point& p)
 {
     const int idx = index(p);
-    const int live = current.neighbors(p);
+    const int live = current.neighbors(idx);
     grid_[idx] = gameOfLife(current.grid_[idx], live);
 }
 
@@ -111,7 +112,7 @@ void Grid<SIZE>::updateGrid(const Grid<SIZE>& current)
     for (int x = 0; x < SIZE; ++x) {
         for (int y = 0; y < SIZE; ++y) {
             const Point p { x, y };
-            updateGrid(current, p);
+            update(current, p);
         }
     }
 }
@@ -138,7 +139,7 @@ void Grid<SIZE>::updateGrid(const Grid<SIZE>& current)
         [&](int x) {
             for (int y = 0; y < SIZE; ++y) {
                 const Point p { x, y };
-                updateGrid(current, p);
+                update(current, p);
             }
         });
 }
