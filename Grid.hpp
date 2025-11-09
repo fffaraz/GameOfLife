@@ -59,8 +59,8 @@ int Grid<SIZE>::countLiveNeighbors(const Point& p) const
         for (int j = -1; j <= 1; ++j) {
             if (i == 0 && j == 0)
                 continue; // Skip the cell itself
-            const int nx = p.x + i;
-            const int ny = p.y + j;
+            const int nx = p.x + i; // (p.x + i) % SIZE;
+            const int ny = p.y + j; // (p.y + j) % SIZE;
             if (nx >= 0 && nx < SIZE && ny >= 0 && ny < SIZE) {
                 liveNeighbors += get({ nx, ny }) ? 1 : 0;
             }
