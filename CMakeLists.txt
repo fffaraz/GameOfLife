@@ -50,14 +50,14 @@ FetchContent_Declare(
     OVERRIDE_FIND_PACKAGE)
 FetchContent_MakeAvailable(SDL3)
 
-FetchContent_Declare(
-    SDL3_image
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
-    GIT_TAG release-3.2.x
-    GIT_SHALLOW ON
-    EXCLUDE_FROM_ALL
-    OVERRIDE_FIND_PACKAGE)
-FetchContent_MakeAvailable(SDL3_image)
+# FetchContent_Declare(
+#     SDL3_image
+#     GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
+#     GIT_TAG release-3.2.x
+#     GIT_SHALLOW ON
+#     EXCLUDE_FROM_ALL
+#     OVERRIDE_FIND_PACKAGE)
+# FetchContent_MakeAvailable(SDL3_image)
 
 FetchContent_Declare(
     raylib
@@ -74,7 +74,7 @@ add_executable(gameoflife-sfml main-sfml.cpp)
 target_link_libraries(gameoflife-sfml PRIVATE gameoflife SFML::Graphics)
 
 add_executable(gameoflife-sdl main-sdl.cpp)
-target_link_libraries(gameoflife-sdl PRIVATE gameoflife SDL3::SDL3-static SDL3_image::SDL3_image-static)
+target_link_libraries(gameoflife-sdl PRIVATE gameoflife SDL3::SDL3-static) # SDL3_image::SDL3_image-static
 target_compile_definitions(gameoflife-sdl PRIVATE SDL_MAIN_USE_CALLBACKS=1) # use the callbacks instead of main()
 
 add_executable(gameoflife-raylib main-raylib.cpp)
