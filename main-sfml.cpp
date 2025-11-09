@@ -1,18 +1,13 @@
 // Conway's Game of Life
 // Copyright (c) 2025 Faraz Fallahi <fffaraz@gmail.com>
 
+#include "Common.hpp"
+
 #include <SFML/Graphics.hpp>
 
-#include "DoubleBuffer.hpp"
-#include "Grid.hpp"
-
+#include <atomic>
 #include <iostream>
 #include <thread>
-
-constexpr int GRID_SIZE = 1024; // Size of the grid in cells
-constexpr int CELL_SIZE = 1; // Size of each cell in pixels
-
-DoubleBuffer<Grid<GRID_SIZE>> grid;
 
 std::atomic_bool mouseRightPressed = false;
 std::atomic_bool mouseLeftPressed = false;
@@ -145,12 +140,8 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
 
 int main()
 {
-    std::cout << "Conway's Game of Life\n";
-    std::cout << "https://github.com/fffaraz/GameOfLife\n";
+    printInfo();
     std::cout << "SFML version: " << SFML_VERSION_MAJOR << "." << SFML_VERSION_MINOR << "." << SFML_VERSION_PATCH << "\n";
-    std::cout << "Grid size: " << GRID_SIZE << " x " << GRID_SIZE << "\n";
-    std::cout << "Cell size: " << CELL_SIZE << " pixels\n";
-    std::cout << "Hardware concurrency: " << std::thread::hardware_concurrency() << "\n";
 
     // Create the main window
     sf::RenderWindow window(sf::VideoMode({ GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE }), "Conway's Game of Life");

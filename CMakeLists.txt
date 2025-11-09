@@ -67,12 +67,15 @@ FetchContent_Declare(
     EXCLUDE_FROM_ALL)
 FetchContent_MakeAvailable(raylib)
 
-add_executable(gameoflife-sfml main-sfml.cpp Grid.hpp DoubleBuffer.hpp)
-target_link_libraries(gameoflife-sfml PRIVATE SFML::Graphics poolSTL::poolSTL)
+add_library(gameoflife INTERFACE Grid.hpp DoubleBuffer.hpp Common.hpp)
+target_link_libraries(gameoflife INTERFACE poolSTL::poolSTL)
 
-add_executable(gameoflife-sdl main-sdl.cpp Grid.hpp DoubleBuffer.hpp)
-target_link_libraries(gameoflife-sdl PRIVATE SDL3::SDL3-static SDL3_image::SDL3_image-static poolSTL::poolSTL)
+add_executable(gameoflife-sfml main-sfml.cpp)
+target_link_libraries(gameoflife-sfml PRIVATE gameoflife SFML::Graphics)
+
+add_executable(gameoflife-sdl main-sdl.cpp)
+target_link_libraries(gameoflife-sdl PRIVATE gameoflife SDL3::SDL3-static SDL3_image::SDL3_image-static)
 target_compile_definitions(gameoflife-sdl PRIVATE SDL_MAIN_USE_CALLBACKS=1) # use the callbacks instead of main()
 
-add_executable(gameoflife-raylib main-raylib.cpp Grid.hpp DoubleBuffer.hpp)
-target_link_libraries(gameoflife-raylib PRIVATE raylib poolSTL::poolSTL)
+add_executable(gameoflife-raylib main-raylib.cpp)
+target_link_libraries(gameoflife-raylib PRIVATE gameoflife raylib)
