@@ -110,7 +110,7 @@ inline sf::Color getCellColor(int liveNeighbours)
 int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
 {
     int numAlive = 0; // Count the number of alive cells
-#if 0
+#if 1
     auto [currGrid, lock] = grid.readBuffer();
 #else
     const auto currGrid = grid.clone();
