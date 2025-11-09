@@ -17,7 +17,7 @@ struct Point {
 };
 
 template <int SIZE>
-class Grid {
+class alignas(128) Grid {
 public:
     int countLiveNeighbours(const Point& p) const;
     inline bool get(const Point& p) const { return grid_[index(p)]; }
@@ -32,6 +32,7 @@ public:
 private:
     std::array<bool, SIZE * SIZE> grid_;
     // std::array<uint8_t, SIZE * SIZE> neighbors_;
+    inline void update(const Grid<SIZE>& current, const Point& p);
     inline static int index(const Point& p) { return (p.x * SIZE) + p.y; }
 #ifdef PARALLEL_GRID
     static constexpr std::array<int, SIZE> indices = [](){ std::array<int, SIZE> v; std::iota(v.begin(), v.end(), 0); return v; }();
@@ -93,6 +94,15 @@ static inline bool gameOfLife(const bool cell, const int liveNeighbours)
     return liveNeighbours == 3 || (cell && liveNeighbours == 2);
 }
 
+template <int SIZE>
+void Grid<SIZE>::update(const Grid<SIZE>& current, const Point& p)
+{
+    const int idx = index(p);
+    const int live = current.countLiveNeighbours(p);
+    grid_[idx] = gameOfLife(current.grid_[idx], live);
+    // neighbors_[idx] = live;
+}
+
 #ifndef PARALLEL_GRID
 
 // Function to update the grid based on the rules of Conway's Game of Life
@@ -102,10 +112,7 @@ void Grid<SIZE>::update(const Grid<SIZE>& current)
     for (int x = 0; x < SIZE; ++x) {
         for (int y = 0; y < SIZE; ++y) {
             const Point p { x, y };
-            const int idx = index(p);
-            const int live = current.countLiveNeighbours(p);
-            grid_[idx] = gameOfLife(current.grid_[idx], live);
-            // neighbors_[idx] = live;
+            update(current, p);
         }
     }
 }
@@ -121,10 +128,7 @@ void Grid<SIZE>::update(const Grid<SIZE>& current)
         [&](int x) {
             for (int y = 0; y < SIZE; ++y) {
                 const Point p { x, y };
-                const int idx = index(p);
-                const int live = current.countLiveNeighbours(p);
-                grid_[idx] = gameOfLife(current.grid_[idx], live);
-                // neighbors_[idx] = live;
+                update(current, p);
             }
         });
 }
