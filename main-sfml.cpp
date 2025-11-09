@@ -1,4 +1,4 @@
-// Conway's Game of Life
+// Conway's Game of Life using SFML
 // Copyright (c) 2025 Faraz Fallahi <fffaraz@gmail.com>
 
 #include "Common.hpp"
