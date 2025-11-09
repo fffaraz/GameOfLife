@@ -9,7 +9,7 @@
 #include <iostream>
 #include <thread>
 
-constexpr int GRID_SIZE = 512; // Size of the grid in cells
+constexpr int GRID_SIZE = 1024; // Size of the grid in cells
 constexpr int CELL_SIZE = 1; // Size of each cell in pixels
 
 DoubleBuffer<Grid<GRID_SIZE>> grid;
@@ -156,7 +156,7 @@ int main()
     sf::RenderWindow window(sf::VideoMode({ GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE }), "Conway's Game of Life");
     if (1)
     {
-        const int targetFPS = 30;
+        const int targetFPS = 60;
         window.setFramerateLimit(targetFPS);
         std::cout << "Framerate Limit: " << targetFPS << "\n";
     }
