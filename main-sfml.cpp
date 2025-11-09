@@ -79,7 +79,7 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
             const Point p { i, j };
             const bool cellAlive = currGrid.get(p);
             numAlive += cellAlive ? 1 : 0;
-#if 0 // Enable to color cells based on live neighbors
+#if 1 // Enable to color cells based on live neighbors
             const sf::Color color = cellAlive ? getCellColor(currGrid.countLiveNeighbors(p)) : sf::Color::Black;
 #else
             const sf::Color color = cellAlive ? sf::Color::White : sf::Color::Black;

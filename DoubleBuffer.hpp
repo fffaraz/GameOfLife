@@ -3,7 +3,7 @@
 #include <mutex>
 #include <shared_mutex>
 
-#if 0
+#if 0 // Use real mutex for write buffer
 using WriteMutex = std::mutex;
 #else
 class FakeMutex {
