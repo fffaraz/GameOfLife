@@ -28,7 +28,7 @@ static void updateGrid(const sf::RenderWindow& window)
     // Get the current grid and update nextGrid - scope ensures readLock is released
     {
         const auto [currGrid, readLock] = grid.readBuffer();
-        nextGrid.update(currGrid);
+        nextGrid.updateGrid(currGrid);
     }
 
     // Add some noise to the grid
@@ -44,14 +44,16 @@ static void updateGrid(const sf::RenderWindow& window)
         }
     }
 
+    nextGrid.updateNeighbors();
+
     // Swap the buffers
     grid.swap(std::move(writeLock));
 }
 
-// Returns cell color based on the number of live neighbours
-inline sf::Color getCellColor(int liveNeighbours)
+// Returns cell color based on the number of live neighbors
+inline sf::Color getCellColor(int liveNeighbors)
 {
-    switch (liveNeighbours) {
+    switch (liveNeighbors) {
     case 0:
         return sf::Color::Red;
     case 1:
@@ -79,7 +81,7 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
             const Point p { i, j };
             const bool cellAlive = currGrid.get(p);
             numAlive += cellAlive ? 1 : 0;
-            const sf::Color color = cellAlive ? getCellColor(currGrid.countLiveNeighbours(p)) : sf::Color::Black;
+            const sf::Color color = cellAlive ? getCellColor(currGrid.neighbors(p)) : sf::Color::Black;
             if (CELL_SIZE == 1) {
                 const int index = (i * GRID_SIZE) + j;
                 vertices[index].color = color;
