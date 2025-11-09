@@ -1,11 +1,18 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(gameoflife LANGUAGES CXX)
+project(gameoflife VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(BUILD_SHARED_LIBS OFF)
+
 set(SFML_USE_STATIC_STD_LIBS ON)
+set(SDL_SHARED OFF)
+set(SDL_STATIC ON)
+set(SDL3IMAGE_AVIF OFF)
+set(SDL3IMAGE_INSTALL OFF)
+set(SDL3IMAGE_BUILD_SHARED_LIBS OFF)
 
 if (NOT MSVC AND CMAKE_BUILD_TYPE STREQUAL "Release")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -funroll-loops")
@@ -34,5 +41,27 @@ FetchContent_Declare(
   GIT_SHALLOW ON)
 FetchContent_MakeAvailable(poolSTL)
 
-add_executable(gameoflife main.cpp Grid.hpp DoubleBuffer.hpp)
-target_link_libraries(gameoflife PRIVATE SFML::Graphics poolSTL::poolSTL)
+FetchContent_Declare(
+    SDL3
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+    GIT_TAG release-3.2.x
+    GIT_SHALLOW ON
+    EXCLUDE_FROM_ALL
+    OVERRIDE_FIND_PACKAGE)
+FetchContent_MakeAvailable(SDL3)
+
+FetchContent_Declare(
+    SDL3_image
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
+    GIT_TAG release-3.2.x
+    GIT_SHALLOW ON
+    EXCLUDE_FROM_ALL
+    OVERRIDE_FIND_PACKAGE)
+FetchContent_MakeAvailable(SDL3_image)
+
+add_executable(gameoflife-sfml main-sfml.cpp Grid.hpp DoubleBuffer.hpp)
+target_link_libraries(gameoflife-sfml PRIVATE SFML::Graphics poolSTL::poolSTL)
+
+add_executable(gameoflife-sdl main-sdl.cpp Grid.hpp DoubleBuffer.hpp)
+target_link_libraries(gameoflife-sdl PRIVATE SDL3::SDL3-static SDL3_image::SDL3_image-static poolSTL::poolSTL)
+target_compile_definitions(gameoflife-sdl PRIVATE SDL_MAIN_USE_CALLBACKS=1) # use the callbacks instead of main()
