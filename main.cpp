@@ -92,15 +92,19 @@ inline sf::Color getCellColor(int liveNeighbours)
 {
     switch (liveNeighbours) {
     case 0:
-        return sf::Color::White;
-    case 1:
         return sf::Color::Red;
+    case 1:
+        return sf::Color::Green;
     case 2:
         return sf::Color::Blue;
     case 3:
+        return sf::Color::Cyan;
+    case 4:
         return sf::Color::Magenta;
+    case 5:
+        return sf::Color::Yellow;
     default:
-        return sf::Color::Green;
+        return sf::Color::White;
     }
 }
 
@@ -109,13 +113,13 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
 {
     int numAlive = 0; // Count the number of alive cells
     auto [currGrid, lock] = grid.readBuffer();
-    // Update the vertex array
     for (int i = 0; i < GRID_SIZE; ++i) {
         for (int j = 0; j < GRID_SIZE; ++j) {
-            const bool cellAlive = currGrid.get({ i, j });
+            const Point p { i, j };
+            const bool cellAlive = currGrid.get(p);
             numAlive += cellAlive ? 1 : 0;
-            const sf::Color color = cellAlive ? getCellColor(currGrid.countLiveNeighbours({ i, j })) : sf::Color::Black;
-            const int index = (i * GRID_SIZE + j) * 6;
+            const sf::Color color = cellAlive ? getCellColor(currGrid.countLiveNeighbours(p)) : sf::Color::Black;
+            const int index = ((i * GRID_SIZE) + j) * 6;
             vertices[index + 0].color = color;
             vertices[index + 1].color = color;
             vertices[index + 2].color = color;
