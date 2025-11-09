@@ -10,7 +10,7 @@
 #include <thread>
 
 constexpr int GRID_SIZE = 512; // Size of the grid in cells
-constexpr int CELL_SIZE = 2; // Size of each cell in pixels
+constexpr int CELL_SIZE = 1; // Size of each cell in pixels
 
 DoubleBuffer<Grid<GRID_SIZE>> grid;
 
@@ -126,6 +126,11 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
             const bool cellAlive = currGrid.get(p);
             numAlive += cellAlive ? 1 : 0;
             const sf::Color color = cellAlive ? getCellColor(currGrid.countLiveNeighbours(p)) : sf::Color::Black;
+            if (CELL_SIZE == 1) {
+                const int index = (i * GRID_SIZE) + j;
+                vertices[index].color = color;
+                continue;
+            }
             const int index = ((i * GRID_SIZE) + j) * 6;
             vertices[index + 0].color = color;
             vertices[index + 1].color = color;
@@ -133,27 +138,6 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
             vertices[index + 3].color = color;
             vertices[index + 4].color = color;
             vertices[index + 5].color = color;
-        }
-    }
-    return numAlive; // Return the number of alive cells
-}
-
-// Function to update the image
-int updateImage(sf::RenderWindow& window, sf::Image& image)
-{
-    int numAlive = 0; // Count the number of alive cells
-#if 0
-    auto [currGrid, lock] = grid.readBuffer();
-#else
-    const auto currGrid = grid.clone();
-#endif
-    for (int i = 0; i < GRID_SIZE; ++i) {
-        for (int j = 0; j < GRID_SIZE; ++j) {
-            const Point p { i, j };
-            const bool cellAlive = currGrid.get(p);
-            numAlive += cellAlive ? 1 : 0;
-            const sf::Color color = cellAlive ? getCellColor(currGrid.countLiveNeighbours(p)) : sf::Color::Black;
-            image.setPixel({static_cast<unsigned int>(i), static_cast<unsigned int>(j)}, color);
         }
     }
     return numAlive; // Return the number of alive cells
@@ -179,23 +163,31 @@ int main()
     std::cout.flush();
 
     // Vertex array for the grid
-    sf::VertexArray vertices(sf::PrimitiveType::Triangles, GRID_SIZE * GRID_SIZE * 6);
-    for (int i = 0; i < GRID_SIZE; ++i) {
-        for (int j = 0; j < GRID_SIZE; ++j) {
-            const int index = ((i * GRID_SIZE) + j) * 6;
-            const float x = (float)i * CELL_SIZE;
-            const float y = (float)j * CELL_SIZE;
-            vertices[index + 0].position = sf::Vector2f(x, y);
-            vertices[index + 1].position = sf::Vector2f(x + CELL_SIZE, y);
-            vertices[index + 2].position = sf::Vector2f(x + CELL_SIZE, y + CELL_SIZE);
-            vertices[index + 3].position = sf::Vector2f(x, y);
-            vertices[index + 4].position = sf::Vector2f(x, y + CELL_SIZE);
-            vertices[index + 5].position = sf::Vector2f(x + CELL_SIZE, y + CELL_SIZE);
+    sf::VertexArray vertices = CELL_SIZE > 1 ? sf::VertexArray(sf::PrimitiveType::Triangles, GRID_SIZE * GRID_SIZE * 6) : sf::VertexArray(sf::PrimitiveType::Points, GRID_SIZE * GRID_SIZE);
+    if (CELL_SIZE > 1) {
+        for (int i = 0; i < GRID_SIZE; ++i) {
+            for (int j = 0; j < GRID_SIZE; ++j) {
+                const int index = ((i * GRID_SIZE) + j) * 6;
+                const float x = (float)i * CELL_SIZE;
+                const float y = (float)j * CELL_SIZE;
+                vertices[index + 0].position = sf::Vector2f(x, y);
+                vertices[index + 1].position = sf::Vector2f(x + CELL_SIZE, y);
+                vertices[index + 2].position = sf::Vector2f(x + CELL_SIZE, y + CELL_SIZE);
+                vertices[index + 3].position = sf::Vector2f(x, y);
+                vertices[index + 4].position = sf::Vector2f(x, y + CELL_SIZE);
+                vertices[index + 5].position = sf::Vector2f(x + CELL_SIZE, y + CELL_SIZE);
+            }
+        }
+    } else {
+        for (int i = 0; i < GRID_SIZE; ++i) {
+            for (int j = 0; j < GRID_SIZE; ++j) {
+                const int index = (i * GRID_SIZE) + j;
+                const float x = (float)i * CELL_SIZE;
+                const float y = (float)j * CELL_SIZE;
+                vertices[index].position = sf::Vector2f(x, y);
+            }
         }
     }
-
-    // Image for the grid (used if CELL_SIZE == 1)
-    sf::Image image({GRID_SIZE, GRID_SIZE}, sf::Color::Black);
 
     // Text to display the number of alive cells
     sf::Font font;
@@ -271,7 +263,7 @@ int main()
         }
 
         // Update the grid
-        const int numAlive = CELL_SIZE > 1 ? updateVertices(window, vertices) : updateImage(window, image);
+        const int numAlive = updateVertices(window, vertices);
         txtNumAlive.setString("Alive: " + std::to_string(numAlive));
 
         // Update FPS counter
@@ -289,14 +281,7 @@ int main()
         window.clear();
 
         // Draw the grid and texts
-        if (CELL_SIZE > 1) {
-            window.draw(vertices);
-        } else {
-            sf::Texture texture;
-            texture.loadFromImage(image);
-            sf::Sprite sprite(texture);
-            window.draw(sprite);
-        }
+        window.draw(vertices);
         window.draw(txtNumAlive);
         window.draw(txtFPS);
 
