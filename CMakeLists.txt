@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(BUILD_SHARED_LIBS OFF)
 
 if (NOT MSVC AND CMAKE_BUILD_TYPE STREQUAL "Release")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -static-libgcc -static-libstdc++")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -static-libgcc -static-libstdc++ -funroll-loops -O3")
 endif()
 
 # SFML dependencies:
@@ -20,15 +20,17 @@ FetchContent_Declare(
   SFML
   GIT_REPOSITORY https://github.com/SFML/SFML.git
   GIT_TAG 3.0.x
-  GIT_SHALLOW TRUE)
+  GIT_SHALLOW ON
+  EXCLUDE_FROM_ALL
+  SYSTEM)
 FetchContent_MakeAvailable(SFML)
 
 FetchContent_Declare(
   poolSTL
   GIT_REPOSITORY https://github.com/alugowski/poolSTL.git
   GIT_TAG main
-  GIT_SHALLOW TRUE)
+  GIT_SHALLOW ON)
 FetchContent_MakeAvailable(poolSTL)
 
 add_executable(gameoflife main.cpp Grid.hpp DoubleBuffer.hpp)
-target_link_libraries(gameoflife PRIVATE sfml-graphics poolSTL::poolSTL)
+target_link_libraries(gameoflife PRIVATE SFML::Graphics poolSTL::poolSTL)

@@ -16,7 +16,7 @@ DoubleBuffer<Grid<GRID_SIZE>> grid;
 
 #if 1
 // Update the next grid in place
-static void updateGrid(sf::RenderWindow& window)
+static void updateGrid(const sf::RenderWindow& window)
 {
     // Get the next grid to write to
     auto [nextGrid, writeLock] = grid.writeBuffer();
