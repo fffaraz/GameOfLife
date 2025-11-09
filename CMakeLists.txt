@@ -25,7 +25,7 @@ FetchContent_MakeAvailable(SFML)
 
 FetchContent_Declare(
   poolSTL
-  GIT_REPOSITORY https://github.com/alugowski/poolSTL
+  GIT_REPOSITORY https://github.com/alugowski/poolSTL.git
   GIT_TAG main
   GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable(poolSTL)

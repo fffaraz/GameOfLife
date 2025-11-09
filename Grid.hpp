@@ -8,6 +8,7 @@
 #include <numeric>
 #include <poolstl/poolstl.hpp>
 #define PARALLEL_GRID 1
+static task_thread_pool::task_thread_pool threadPool{std::thread::hardware_concurrency() / 2};
 #endif
 
 struct Point {
@@ -103,7 +104,7 @@ template <int SIZE>
 void Grid<SIZE>::update(const Grid<SIZE>& current)
 {
     // std::execution::par_unseq
-    std::for_each(poolstl::par, indices.begin(), indices.end(),
+    std::for_each(poolstl::par.on(threadPool), indices.begin(), indices.end(),
         [&](int x) {
             for (int y = 0; y < SIZE; ++y) {
                 const Point p { x, y };
