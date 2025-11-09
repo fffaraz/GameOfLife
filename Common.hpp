@@ -1,3 +1,5 @@
+#pragma once
+
 #include "DoubleBuffer.hpp"
 #include "Grid.hpp"
 
