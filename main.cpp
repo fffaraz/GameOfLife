@@ -111,7 +111,6 @@ inline sf::Color getCellColor(int liveNeighbours)
     }
 }
 
-#if CELL_SIZE > 1
 // Function to update the vertex array
 int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
 {
@@ -138,7 +137,7 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
     }
     return numAlive; // Return the number of alive cells
 }
-#else
+
 // Function to update the image
 int updateImage(sf::RenderWindow& window, sf::Image& image)
 {
@@ -159,7 +158,6 @@ int updateImage(sf::RenderWindow& window, sf::Image& image)
     }
     return numAlive; // Return the number of alive cells
 }
-#endif
 
 int main()
 {
@@ -180,7 +178,6 @@ int main()
     }
     std::cout.flush();
 
-#if CELL_SIZE > 1
     // Vertex array for the grid
     sf::VertexArray vertices(sf::PrimitiveType::Triangles, GRID_SIZE * GRID_SIZE * 6);
     for (int i = 0; i < GRID_SIZE; ++i) {
@@ -196,9 +193,9 @@ int main()
             vertices[index + 5].position = sf::Vector2f(x + CELL_SIZE, y + CELL_SIZE);
         }
     }
-#else
+
+    // Image for the grid (used if CELL_SIZE == 1)
     sf::Image image({GRID_SIZE, GRID_SIZE}, sf::Color::Black);
-#endif
 
     // Text to display the number of alive cells
     sf::Font font;
@@ -274,11 +271,7 @@ int main()
         }
 
         // Update the grid
-#if CELL_SIZE > 1
-        const int numAlive = updateVertices(window, vertices);
-#else
-        const int numAlive = updateImage(window, image);
-#endif
+        const int numAlive = CELL_SIZE > 1 ? updateVertices(window, vertices) : updateImage(window, image);
         txtNumAlive.setString("Alive: " + std::to_string(numAlive));
 
         // Update FPS counter
@@ -296,14 +289,14 @@ int main()
         window.clear();
 
         // Draw the grid and texts
-#if CELL_SIZE > 1
-        window.draw(vertices);
-#else
-        sf::Texture texture;
-        texture.loadFromImage(image);
-        sf::Sprite sprite(texture);
-        window.draw(sprite);
-#endif
+        if (CELL_SIZE > 1) {
+            window.draw(vertices);
+        } else {
+            sf::Texture texture;
+            texture.loadFromImage(image);
+            sf::Sprite sprite(texture);
+            window.draw(sprite);
+        }
         window.draw(txtNumAlive);
         window.draw(txtFPS);
 
