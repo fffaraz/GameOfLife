@@ -37,6 +37,13 @@ public:
         return { buffer_[1 - index_], std::move(lock) };
     }
 
+    // Clones the current read buffer
+    T clone() const
+    {
+        read_lock lock(readMutex_);
+        return buffer_[index_];
+    }
+
     // Sets new data to the write buffer and swaps the buffers
     void setAndSwap(T newData)
     {
