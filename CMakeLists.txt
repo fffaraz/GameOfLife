@@ -26,6 +26,13 @@ endif()
 include(FetchContent)
 
 FetchContent_Declare(
+  poolSTL
+  GIT_REPOSITORY https://github.com/alugowski/poolSTL.git
+  GIT_TAG main
+  GIT_SHALLOW ON)
+FetchContent_MakeAvailable(poolSTL)
+
+FetchContent_Declare(
   SFML
   GIT_REPOSITORY https://github.com/SFML/SFML.git
   GIT_TAG 3.0.x
@@ -33,13 +40,6 @@ FetchContent_Declare(
   EXCLUDE_FROM_ALL
   SYSTEM)
 FetchContent_MakeAvailable(SFML)
-
-FetchContent_Declare(
-  poolSTL
-  GIT_REPOSITORY https://github.com/alugowski/poolSTL.git
-  GIT_TAG main
-  GIT_SHALLOW ON)
-FetchContent_MakeAvailable(poolSTL)
 
 FetchContent_Declare(
     SDL3
@@ -59,9 +59,20 @@ FetchContent_Declare(
     OVERRIDE_FIND_PACKAGE)
 FetchContent_MakeAvailable(SDL3_image)
 
+FetchContent_Declare(
+    raylib
+    GIT_REPOSITORY https://github.com/raysan5/raylib.git
+    GIT_TAG 5.5
+    GIT_SHALLOW ON
+    EXCLUDE_FROM_ALL)
+FetchContent_MakeAvailable(raylib)
+
 add_executable(gameoflife-sfml main-sfml.cpp Grid.hpp DoubleBuffer.hpp)
 target_link_libraries(gameoflife-sfml PRIVATE SFML::Graphics poolSTL::poolSTL)
 
 add_executable(gameoflife-sdl main-sdl.cpp Grid.hpp DoubleBuffer.hpp)
 target_link_libraries(gameoflife-sdl PRIVATE SDL3::SDL3-static SDL3_image::SDL3_image-static poolSTL::poolSTL)
 target_compile_definitions(gameoflife-sdl PRIVATE SDL_MAIN_USE_CALLBACKS=1) # use the callbacks instead of main()
+
+add_executable(gameoflife-raylib main-raylib.cpp Grid.hpp DoubleBuffer.hpp)
+target_link_libraries(gameoflife-raylib PRIVATE raylib poolSTL::poolSTL)
