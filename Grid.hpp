@@ -23,7 +23,7 @@ public:
     inline bool get(const Point& p) const { return grid_[index(p)]; }
     inline void set(const Point& p, const bool value) { grid_[index(p)] = value; }
     inline void toggle(const Point& p) { const int idx = index(p); grid_[idx] = !grid_[idx]; }
-    // inline uint8_t neighbors(const Point& p) const { return neighbors_[index(p)]; }
+    // inline int neighbors(const Point& p) const { return neighbors_[index(p)]; }
     void toggleBlock(const Point& p);
     void update(const Grid<SIZE>& current);
     void addNoise(int n = 1);
