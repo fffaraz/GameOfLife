@@ -3,7 +3,7 @@
 #include <array>
 #include <random>
 
-#if 0
+#if 1
 #include <numeric>
 #include <poolstl/poolstl.hpp>
 #define PARALLEL_GRID 1
