@@ -42,21 +42,20 @@ private:
 template <int SIZE>
 int Grid<SIZE>::countLiveNeighbours(const Point& p) const
 {
-    int liveNeighbours = 0;
     // Fast path for interior cells: no bounds checks and no per-neighbor index math
     if (p.x > 0 && p.x < SIZE - 1 && p.y > 0 && p.y < SIZE - 1) {
         const int idx = index(p);
-        liveNeighbours += grid_[idx - SIZE - 1] ? 1 : 0; // Top-left
-        liveNeighbours += grid_[idx - SIZE    ] ? 1 : 0; // Top
-        liveNeighbours += grid_[idx - SIZE + 1] ? 1 : 0; // Top-right
-        liveNeighbours += grid_[idx        - 1] ? 1 : 0; // Left
-        liveNeighbours += grid_[idx        + 1] ? 1 : 0; // Right
-        liveNeighbours += grid_[idx + SIZE - 1] ? 1 : 0; // Bottom-left
-        liveNeighbours += grid_[idx + SIZE    ] ? 1 : 0; // Bottom
-        liveNeighbours += grid_[idx + SIZE + 1] ? 1 : 0; // Bottom-right
-        return liveNeighbours;
+        return grid_[idx - SIZE - 1]  // Top-left
+             + grid_[idx - SIZE    ]  // Top
+             + grid_[idx - SIZE + 1]  // Top-right
+             + grid_[idx        - 1]  // Left
+             + grid_[idx        + 1]  // Right
+             + grid_[idx + SIZE - 1]  // Bottom-left
+             + grid_[idx + SIZE    ]  // Bottom
+             + grid_[idx + SIZE + 1]; // Bottom-right
     }
     // General case with bounds checks
+    int liveNeighbours = 0;
     for (int i = -1; i <= 1; ++i) {
         for (int j = -1; j <= 1; ++j) {
             if (i == 0 && j == 0)
