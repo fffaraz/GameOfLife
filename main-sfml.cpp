@@ -223,8 +223,10 @@ int main()
         frameCount++;
         if (fpsClock.getElapsedTime().asSeconds() >= 1.0f) {
             const float fps = frameCount / fpsClock.getElapsedTime().asSeconds();
+            const float eps = epochsPerSecond.load();
+            const float cups = eps * (GRID_SIZE * GRID_SIZE / 1'000'000'000.0);
             char buffer[50];
-            snprintf(buffer, sizeof(buffer), "FPS: %.2f\nEPS: %.2f", fps, epochsPerSecond.load());
+            snprintf(buffer, sizeof(buffer), "FPS: %.2f\nEPS: %.2f\nCUpS: %.2fe9", fps, eps, cups);
             txtFPS.setString(buffer);
             frameCount = 0;
             fpsClock.restart();
