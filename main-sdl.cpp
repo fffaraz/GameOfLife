@@ -13,6 +13,7 @@ static SDL_Renderer *renderer = NULL;
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
+    printInfo();
     SDL_SetAppMetadata("Conway's Game of Life", "1.0", "com.example.gameoflife");
 
     if (!SDL_Init(SDL_INIT_VIDEO)) {
@@ -38,18 +39,51 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
 
+static void SimStep()
+{
+    float xpos = 0;
+    float ypos = 0;
+    const SDL_MouseButtonFlags btn = SDL_GetMouseState(&xpos, &ypos);
+
+    auto [nextGrid, writeLock] = grid.writeBuffer();
+    if (btn & SDL_BUTTON_RMASK) {
+        nextGrid.clear();
+        grid.swap(std::move(writeLock));
+        return;
+    }
+    {
+        const auto [currGrid, readLock] = grid.readBuffer();
+        nextGrid.updateGrid(currGrid);
+    }
+    nextGrid.addNoise();
+    if (btn & SDL_BUTTON_LMASK) {
+        nextGrid.toggleBlock({ static_cast<int>(xpos), static_cast<int>(ypos) });
+    }
+    grid.swap(std::move(writeLock));
+}
+
 /* This function runs once per frame, and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate)
 {
-    const double now = ((double)SDL_GetTicks()) / 1000.0;  /* convert from milliseconds to seconds. */
-    /* choose the color for the frame we will draw. The sine wave trick makes it fade between colors smoothly. */
-    const float red = (float) (0.5 + 0.5 * SDL_sin(now));
-    const float green = (float) (0.5 + 0.5 * SDL_sin(now + SDL_PI_D * 2 / 3));
-    const float blue = (float) (0.5 + 0.5 * SDL_sin(now + SDL_PI_D * 4 / 3));
-    SDL_SetRenderDrawColorFloat(renderer, red, green, blue, SDL_ALPHA_OPAQUE_FLOAT);  /* new color, full alpha. */
+    SimStep();
 
     /* clear the window to the draw color. */
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+
+    int aliveCount = 0;
+    {
+        const auto [currGrid, lock] = grid.readBuffer();
+        for (int i = 0; i < GRID_SIZE; ++i) {
+            for (int j = 0; j < GRID_SIZE; ++j) {
+                if (currGrid.get({i, j})) {
+                    aliveCount++;
+                    SDL_RenderPoint(renderer, i, j);
+                }
+            }
+        }
+    }
 
     /* put the newly-cleared rendering on the screen. */
     SDL_RenderPresent(renderer);
