@@ -49,7 +49,7 @@ static void updateGrid(const sf::RenderWindow& window)
 }
 
 // Color map for cells based on number of live neighbors
-static std::array<sf::Color, 9> colorMap {
+static const std::array<sf::Color, 9> colorMap {
     sf::Color::Red, // 0 live neighbors
     sf::Color::Green, // 1 live neighbor
     sf::Color::Blue, // 2 live neighbors
