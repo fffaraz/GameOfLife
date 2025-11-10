@@ -5,7 +5,7 @@
 
 #include <raylib.h>
 
-static void step()
+static void SimStep()
 {
     auto [nextGrid, writeLock] = grid.writeBuffer();
     if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
@@ -27,6 +27,8 @@ static void step()
 
 int main()
 {
+    printInfo();
+
     // Initialization
     InitWindow(GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE, "Conway's Game of Life");
 
@@ -39,18 +41,21 @@ int main()
     {
         BeginDrawing();
         ClearBackground(BLACK);
-        step();
+        SimStep();
+        int aliveCount = 0;
         {
             const auto [currGrid, lock] = grid.readBuffer();
             for (int i = 0; i < GRID_SIZE; ++i) {
                 for (int j = 0; j < GRID_SIZE; ++j) {
                     if (currGrid.get({i, j})) {
+                        aliveCount++;
                         DrawPixel(i, j, WHITE);
                     }
                 }
             }
         }
-        DrawText("Conway's Game of Life", 10, 10, 20, LIGHTGRAY);
+        std::string aliveCountStr = "Alive: " + std::to_string(aliveCount);
+        DrawText(aliveCountStr.c_str(), 10, 10, 20, LIGHTGRAY);
         EndDrawing();
     }
 
