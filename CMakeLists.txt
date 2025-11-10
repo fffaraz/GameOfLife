@@ -16,7 +16,7 @@ set(SDL3IMAGE_BUILD_SHARED_LIBS OFF)
 
 if (NOT MSVC AND CMAKE_BUILD_TYPE STREQUAL "Release")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -funroll-loops")
-  set(CMAKE_CXX_FLAGS "-static -static-libgcc -static-libstdc++")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -static-libgcc -static-libstdc++")
   # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -mtune=native")
 endif()
 
