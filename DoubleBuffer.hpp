@@ -26,28 +26,28 @@ public:
     using read_lock = std::shared_lock<std::shared_mutex>;
     using write_lock = std::unique_lock<WriteMutex>;
 
-    // Returns a const reference to the current read buffer along with a shared read lock.
+    // Return a const reference to the current read buffer along with a shared read lock.
     std::pair<const T&, read_lock> readBuffer() const
     {
         read_lock lock(readMutex_);
         return { buffer_[index_], std::move(lock) };
     }
 
-    // Returns a reference to the current write buffer along with an exclusive write lock.
+    // Return a reference to the current write buffer along with an exclusive write lock.
     std::pair<T&, write_lock> writeBuffer()
     {
         write_lock lock(writeMutex_);
         return { buffer_[1 - index_], std::move(lock) };
     }
 
-    // Clones the current read buffer.
+    // Clone the current read buffer.
     T clone() const
     {
         read_lock lock(readMutex_);
         return buffer_[index_];
     }
 
-    // Sets new data in the write buffer and swaps the buffers.
+    // Set new data in the write buffer and swap the buffers.
     void setAndSwap(T newData)
     {
         write_lock writeLock(writeMutex_);
@@ -55,14 +55,14 @@ public:
         swap(std::move(writeLock));
     }
 
-    // Swaps the read and write buffers.
+    // Swap the read and write buffers.
     void swap()
     {
         write_lock writeLock(writeMutex_);
         swap(std::move(writeLock));
     }
 
-    // Swaps the read and write buffers using an existing write lock.
+    // Swap the read and write buffers using an existing write lock.
     void swap(write_lock&& writeLock)
     {
         std::unique_lock<std::shared_mutex> readLock(readMutex_); // Exclusive read lock to prevent reads during the swap.

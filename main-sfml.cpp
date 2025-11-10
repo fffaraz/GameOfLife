@@ -12,10 +12,10 @@
 std::atomic_bool mouseRightPressed = false;
 std::atomic_bool mouseLeftPressed = false;
 
-// Update the next grid
+// Update the next grid state
 static void updateGrid(const sf::RenderWindow& window)
 {
-    // Get the next grid to write to
+    // Get the writable next grid
     auto [nextGrid, writeLock] = grid.writeBuffer();
 
     // Handle right mouse button click
@@ -31,7 +31,7 @@ static void updateGrid(const sf::RenderWindow& window)
         nextGrid.updateGrid(currGrid);
     }
 
-    // Add some noise to the grid
+    // Add random noise to the grid
     nextGrid.addNoise();
 
     // Handle mouse movement while the left button is pressed
@@ -40,7 +40,7 @@ static void updateGrid(const sf::RenderWindow& window)
         const int x = mousePos.x / CELL_SIZE;
         const int y = mousePos.y / CELL_SIZE;
         if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
-            nextGrid.toggleBlock({ x, y }); // Turn on a 3x3 block
+            nextGrid.toggleBlock({ x, y }); // Toggle a 3x3 block
         }
     }
 
@@ -48,7 +48,7 @@ static void updateGrid(const sf::RenderWindow& window)
     grid.swap(std::move(writeLock));
 }
 
-// Color map for cells based on number of live neighbors
+// Color map for cells based on the number of live neighbors
 static const std::array<sf::Color, 9> colorMap {
     sf::Color::Red, // 0 live neighbors
     sf::Color::Green, // 1 live neighbor
@@ -64,7 +64,7 @@ static const std::array<sf::Color, 9> colorMap {
 // Function to update the vertex array
 int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
 {
-    int numAlive = 0; // Count the number of alive cells
+    int numAlive = 0; // Count of alive cells
     auto [currGrid, lock] = grid.readBuffer();
     for (int i = 0; i < GRID_SIZE; ++i) {
         for (int j = 0; j < GRID_SIZE; ++j) {
@@ -134,7 +134,7 @@ int main()
         }
     }
 
-    // Text to display the number of alive cells
+    // Load font for displaying text
     sf::Font font;
     const std::vector<std::string> fontPaths {
 #ifdef _WIN32

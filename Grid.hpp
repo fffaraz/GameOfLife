@@ -6,7 +6,7 @@
 #include <array>
 #include <random>
 
-#if 1 // Enable multi-threaded calculation for the grid updates
+#if 1 // Enable multithreaded calculation of grid updates
 #include <numeric>
 #include <poolstl/poolstl.hpp>
 #define PARALLEL_GRID 1
@@ -40,7 +40,7 @@ private:
 #endif
 };
 
-// Function to count the number of live neighbors for a cell at (x, y)
+// Count the number of live neighbors for the cell at (x, y)
 template <int SIZE>
 int Grid<SIZE>::countLiveNeighbors(const Point& p) const
 {
@@ -72,7 +72,7 @@ int Grid<SIZE>::countLiveNeighbors(const Point& p) const
     return liveNeighbors;
 }
 
-// Function to toggle a 3x3 block of cells at the given position
+// Toggle a 3x3 block of cells at the given position
 template <int SIZE>
 void Grid<SIZE>::toggleBlock(const Point& p)
 {
@@ -87,7 +87,7 @@ void Grid<SIZE>::toggleBlock(const Point& p)
     }
 }
 
-// Function to apply the rules of Conway's Game of Life
+// Apply the rules of Conway's Game of Life
 static inline bool gameOfLife(const bool cell, const int liveNeighbors)
 {
     // A cell is alive in the next generation if it has 3 neighbors,
@@ -105,7 +105,7 @@ void Grid<SIZE>::updateP(const Grid<SIZE>& current, const Point& p)
 
 #ifndef PARALLEL_GRID
 
-// Function to update the grid based on the rules of Conway's Game of Life
+// Update the grid based on the rules of Conway's Game of Life
 template <int SIZE>
 void Grid<SIZE>::updateGrid(const Grid<SIZE>& current)
 {
@@ -138,7 +138,7 @@ void Grid<SIZE>::updateGrid(const Grid<SIZE>& current)
 static std::mt19937 generator(0);
 static std::uniform_int_distribution<int> distribution(0, 2'000'000'000);
 
-// Function to add random noise to the grid
+// Add random noise to the grid
 template <int SIZE>
 void Grid<SIZE>::addNoise(int n)
 {
@@ -149,7 +149,7 @@ void Grid<SIZE>::addNoise(int n)
     }
 }
 
-// Function to clear the grid
+// Clear the grid
 template <int SIZE>
 void Grid<SIZE>::clear()
 {
