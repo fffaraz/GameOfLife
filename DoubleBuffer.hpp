@@ -6,7 +6,7 @@
 #include <mutex>
 #include <shared_mutex>
 
-#if 0 // Use real mutex for write buffer, not needed with a single writer
+#if 0 // Use a real mutex for the write buffer; not needed with a single writer.
 using WriteMutex = std::mutex;
 #else
 class FakeMutex {
@@ -26,28 +26,28 @@ public:
     using read_lock = std::shared_lock<std::shared_mutex>;
     using write_lock = std::unique_lock<WriteMutex>;
 
-    // Returns a const reference to the current read buffer along with a shared read lock
+    // Returns a const reference to the current read buffer along with a shared read lock.
     std::pair<const T&, read_lock> readBuffer() const
     {
         read_lock lock(readMutex_);
         return { buffer_[index_], std::move(lock) };
     }
 
-    // Returns a reference to the current write buffer along with an exclusive write lock
+    // Returns a reference to the current write buffer along with an exclusive write lock.
     std::pair<T&, write_lock> writeBuffer()
     {
         write_lock lock(writeMutex_);
         return { buffer_[1 - index_], std::move(lock) };
     }
 
-    // Clones the current read buffer
+    // Clones the current read buffer.
     T clone() const
     {
         read_lock lock(readMutex_);
         return buffer_[index_];
     }
 
-    // Sets new data to the write buffer and swaps the buffers
+    // Sets new data in the write buffer and swaps the buffers.
     void setAndSwap(T newData)
     {
         write_lock writeLock(writeMutex_);
@@ -55,23 +55,23 @@ public:
         swap(std::move(writeLock));
     }
 
-    // Swaps the read and write buffers
+    // Swaps the read and write buffers.
     void swap()
     {
         write_lock writeLock(writeMutex_);
         swap(std::move(writeLock));
     }
 
-    // Swaps the read and write buffers using an existing write lock
+    // Swaps the read and write buffers using an existing write lock.
     void swap(write_lock&& writeLock)
     {
-        std::unique_lock<std::shared_mutex> readLock(readMutex_); // exclusive lock to prevent reads during swap
+        std::unique_lock<std::shared_mutex> readLock(readMutex_); // Exclusive read lock to prevent reads during the swap.
         index_ = 1 - index_;
     }
 
 private:
     T buffer_[2];
-    int index_ = 0; // read index (alternates between 0 and 1)
+    int index_ = 0; // Read index (alternates between 0 and 1).
     WriteMutex writeMutex_;
     mutable std::shared_mutex readMutex_;
 };
