@@ -48,26 +48,18 @@ static void updateGrid(const sf::RenderWindow& window)
     grid.swap(std::move(writeLock));
 }
 
-// Returns cell color based on the number of live neighbors
-inline sf::Color getCellColor(int liveNeighbors)
-{
-    switch (liveNeighbors) {
-    case 0:
-        return sf::Color::Red;
-    case 1:
-        return sf::Color::Green;
-    case 2:
-        return sf::Color::Blue;
-    case 3:
-        return sf::Color::Cyan;
-    case 4:
-        return sf::Color::Magenta;
-    case 5:
-        return sf::Color::Yellow;
-    default:
-        return sf::Color::White;
-    }
-}
+// Color map for cells based on number of live neighbors
+static std::array<sf::Color, 9> colorMap {
+    sf::Color::Red, // 0 live neighbors
+    sf::Color::Green, // 1 live neighbor
+    sf::Color::Blue, // 2 live neighbors
+    sf::Color::Cyan, // 3 live neighbors
+    sf::Color::Magenta, // 4 live neighbors
+    sf::Color::Yellow, // 5 live neighbors
+    sf::Color::White, // 6 live neighbors
+    sf::Color::White, // 7 live neighbors
+    sf::Color::White, // 8 live neighbors
+};
 
 // Function to update the vertex array
 int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
@@ -80,7 +72,7 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
             const bool cellAlive = currGrid.get(p);
             numAlive += cellAlive ? 1 : 0;
 #if 1 // Enable to color cells based on live neighbors
-            const sf::Color color = cellAlive ? getCellColor(currGrid.countLiveNeighbors(p)) : sf::Color::Black;
+            const sf::Color color = cellAlive ? colorMap[currGrid.countLiveNeighbors(p)] : sf::Color::Black;
 #else
             const sf::Color color = cellAlive ? sf::Color::White : sf::Color::Black;
 #endif
