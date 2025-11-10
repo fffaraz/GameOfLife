@@ -1,3 +1,6 @@
+// Conway's Game of Life
+// Copyright (c) 2025 Faraz Fallahi <fffaraz@gmail.com>
+
 #pragma once
 
 #include "DoubleBuffer.hpp"
