@@ -5,7 +5,27 @@
 
 #include <raylib.h>
 
-int main(void)
+static void step()
+{
+    auto [nextGrid, writeLock] = grid.writeBuffer();
+    if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+        nextGrid.clear();
+        grid.swap(std::move(writeLock));
+        return;
+    }
+    {
+        const auto [currGrid, readLock] = grid.readBuffer();
+        nextGrid.updateGrid(currGrid);
+    }
+    nextGrid.addNoise();
+    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+        const auto pos = GetMousePosition();
+        nextGrid.toggleBlock({ static_cast<int>(pos.x), static_cast<int>(pos.y) });
+    }
+    grid.swap(std::move(writeLock));
+}
+
+int main()
 {
     // Initialization
     InitWindow(GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE, "Conway's Game of Life");
@@ -18,7 +38,18 @@ int main(void)
     while (!WindowShouldClose())
     {
         BeginDrawing();
-        ClearBackground(RAYWHITE);
+        ClearBackground(BLACK);
+        step();
+        {
+            const auto [currGrid, lock] = grid.readBuffer();
+            for (int i = 0; i < GRID_SIZE; ++i) {
+                for (int j = 0; j < GRID_SIZE; ++j) {
+                    if (currGrid.get({i, j})) {
+                        DrawPixel(i, j, WHITE);
+                    }
+                }
+            }
+        }
         DrawText("Conway's Game of Life", 10, 10, 20, LIGHTGRAY);
         EndDrawing();
     }
