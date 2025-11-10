@@ -6,7 +6,7 @@
 #include <mutex>
 #include <shared_mutex>
 
-#if 0 // Use real mutex for write buffer
+#if 0 // Use real mutex for write buffer, not needed with a single writer
 using WriteMutex = std::mutex;
 #else
 class FakeMutex {
@@ -26,14 +26,14 @@ public:
     using read_lock = std::shared_lock<std::shared_mutex>;
     using write_lock = std::unique_lock<WriteMutex>;
 
-    // Returns a const reference to the current read buffer along with a read lock
+    // Returns a const reference to the current read buffer along with a shared read lock
     std::pair<const T&, read_lock> readBuffer() const
     {
         read_lock lock(readMutex_);
         return { buffer_[index_], std::move(lock) };
     }
 
-    // Returns a reference to the current write buffer along with a write lock
+    // Returns a reference to the current write buffer along with an exclusive write lock
     std::pair<T&, write_lock> writeBuffer()
     {
         write_lock lock(writeMutex_);
