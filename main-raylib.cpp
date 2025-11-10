@@ -5,6 +5,8 @@
 
 #include <raylib.h>
 
+#include <string>
+
 static void SimStep()
 {
     auto [nextGrid, writeLock] = grid.writeBuffer();
