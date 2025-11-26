@@ -141,6 +141,7 @@ int main()
         "C:\\Windows\\Fonts\\Arial.ttf",
 #else
         "/usr/share/fonts/gnu-free/FreeSans.ttf",
+        "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
         "/usr/share/fonts/truetype/msttcorefonts/arial.ttf",
 #endif
     };
