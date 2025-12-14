@@ -109,10 +109,32 @@ void Grid<SIZE>::updateP(const Grid<SIZE>& current, const Point& p)
 template <int SIZE>
 void Grid<SIZE>::updateGrid(const Grid<SIZE>& current)
 {
-    for (int x = 0; x < SIZE; ++x) {
+    // Top row (requires bounds checks)
+    for (int y = 0; y < SIZE; ++y) {
+        updateP(current, { 0, y });
+    }
+
+    // Interior rows without redundant bounds checks
+    for (int x = 1; x < SIZE - 1; ++x) {
+        const bool* const rowAbove = current.grid_.data() + ((x - 1) * SIZE);
+        const bool* const row      = current.grid_.data() + (x * SIZE);
+        const bool* const rowBelow = current.grid_.data() + ((x + 1) * SIZE);
+        bool* const destRow = grid_.data() + (x * SIZE);
+
+        destRow[0] = gameOfLife(row[0], current.countLiveNeighbors({ x, 0 }));
+        for (int y = 1; y < SIZE - 1; ++y) {
+            const int live = rowAbove[y - 1] + rowAbove[y] + rowAbove[y + 1]
+                           + row[y - 1]                   + row[y + 1]
+                           + rowBelow[y - 1] + rowBelow[y] + rowBelow[y + 1];
+            destRow[y] = gameOfLife(row[y], live);
+        }
+        destRow[SIZE - 1] = gameOfLife(row[SIZE - 1], current.countLiveNeighbors({ x, SIZE - 1 }));
+    }
+
+    // Bottom row (requires bounds checks)
+    if constexpr (SIZE > 1) {
         for (int y = 0; y < SIZE; ++y) {
-            const Point p { x, y };
-            updateP(current, p);
+            updateP(current, { SIZE - 1, y });
         }
     }
 }
@@ -126,10 +148,26 @@ void Grid<SIZE>::updateGrid(const Grid<SIZE>& current)
     // std::execution::par_unseq
     std::for_each(poolstl::par.on(threadPool), indices.begin(), indices.end(),
         [&](int x) {
-            for (int y = 0; y < SIZE; ++y) {
-                const Point p { x, y };
-                updateP(current, p);
+            if (x == 0 || x == SIZE - 1) {
+                for (int y = 0; y < SIZE; ++y) {
+                    updateP(current, { x, y });
+                }
+                return;
             }
+
+            const bool* const rowAbove = current.grid_.data() + ((x - 1) * SIZE);
+            const bool* const row      = current.grid_.data() + (x * SIZE);
+            const bool* const rowBelow = current.grid_.data() + ((x + 1) * SIZE);
+            bool* const destRow = grid_.data() + (x * SIZE);
+
+            destRow[0] = gameOfLife(row[0], current.countLiveNeighbors({ x, 0 }));
+            for (int y = 1; y < SIZE - 1; ++y) {
+                const int live = rowAbove[y - 1] + rowAbove[y] + rowAbove[y + 1]
+                               + row[y - 1]                   + row[y + 1]
+                               + rowBelow[y - 1] + rowBelow[y] + rowBelow[y + 1];
+                destRow[y] = gameOfLife(row[y], live);
+            }
+            destRow[SIZE - 1] = gameOfLife(row[SIZE - 1], current.countLiveNeighbors({ x, SIZE - 1 }));
         });
 }
 
