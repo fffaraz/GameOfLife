@@ -75,3 +75,6 @@ target_compile_definitions(gameoflife-sdl PRIVATE SDL_MAIN_USE_CALLBACKS=1) # us
 
 add_executable(gameoflife-raylib main-raylib.cpp)
 target_link_libraries(gameoflife-raylib PRIVATE gameoflife raylib)
+
+add_executable(gameoflife-cli main-cli.cpp)
+target_link_libraries(gameoflife-cli PRIVATE gameoflife)
