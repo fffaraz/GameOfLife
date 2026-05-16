@@ -100,8 +100,7 @@ int main()
 
     // Create the main window
     sf::RenderWindow window(sf::VideoMode({ GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE }), "Conway's Game of Life");
-    if (targetFPS > 0)
-    {
+    if (targetFPS > 0) {
         window.setFramerateLimit(targetFPS);
         std::cout << "Framerate Limit: " << targetFPS << "\n";
     }
