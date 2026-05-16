@@ -5,14 +5,13 @@
 
 #include <chrono>
 #include <cstdlib>
-#include <cstring>
 #include <iostream>
 #include <string>
 
 namespace {
 
 struct Options {
-    int iterations = 1000;
+    int iterations = 10000;
     int warmup = 10;
     bool addNoise = false;
     int initialNoise = (GRID_SIZE * GRID_SIZE) / 4;
@@ -22,7 +21,7 @@ void printUsage(const char* prog)
 {
     std::cout << "Usage: " << prog << " [options]\n"
               << "Options:\n"
-              << "  -i, --iterations N    Number of generations to simulate (default: 1000)\n"
+              << "  -i, --iterations N    Number of generations to simulate (default: 10000)\n"
               << "  -w, --warmup N        Warmup generations excluded from timing (default: 10)\n"
               << "  -n, --noise N         Number of initial random cells to toggle (default: GRID_SIZE^2 / 4)\n"
               << "      --add-noise       Add one random toggle per generation (matches GUI behavior)\n"
