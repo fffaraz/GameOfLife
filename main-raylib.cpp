@@ -7,6 +7,8 @@
 
 #include <string>
 
+DoubleBuffer<Grid<GRID_SIZE>> grid;
+
 static void SimStep()
 {
     auto [nextGrid, writeLock] = grid.writeBuffer();
@@ -29,7 +31,7 @@ static void SimStep()
 
 int main()
 {
-    printInfo();
+    printAppInfo();
 
     // Initialization
     InitWindow(GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE, "Conway's Game of Life");

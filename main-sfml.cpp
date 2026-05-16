@@ -12,6 +12,8 @@
 std::atomic_bool mouseRightPressed = false;
 std::atomic_bool mouseLeftPressed = false;
 
+DoubleBuffer<Grid<GRID_SIZE>> grid;
+
 // Update the next grid state
 static void updateGrid(const sf::RenderWindow& window)
 {
@@ -95,7 +97,7 @@ int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
 
 int main()
 {
-    printInfo();
+    printAppInfo();
     std::cout << "SFML version: " << SFML_VERSION_MAJOR << "." << SFML_VERSION_MINOR << "." << SFML_VERSION_PATCH << "\n";
 
     // Create the main window

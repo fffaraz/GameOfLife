@@ -63,8 +63,8 @@ FetchContent_Declare(
     EXCLUDE_FROM_ALL)
 FetchContent_MakeAvailable(raylib)
 
-add_library(gameoflife INTERFACE Grid.hpp DoubleBuffer.hpp Common.hpp)
-target_link_libraries(gameoflife INTERFACE poolSTL::poolSTL)
+add_library(gameoflife Grid.hpp DoubleBuffer.hpp Common.hpp Common.cpp)
+target_link_libraries(gameoflife PUBLIC poolSTL::poolSTL)
 
 add_executable(gameoflife-sfml main-sfml.cpp)
 target_link_libraries(gameoflife-sfml PRIVATE gameoflife SFML::Graphics)
