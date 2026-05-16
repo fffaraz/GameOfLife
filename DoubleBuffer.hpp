@@ -11,8 +11,8 @@ using WriteMutex = std::mutex;
 #else
 class FakeMutex {
 public:
-    void lock() {}
-    void unlock() {}
+    void lock() { }
+    void unlock() { }
     bool try_lock() { return true; }
 };
 using WriteMutex = FakeMutex;

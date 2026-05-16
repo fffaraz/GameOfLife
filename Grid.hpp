@@ -10,7 +10,7 @@
 #include <numeric>
 #include <poolstl/poolstl.hpp>
 #define PARALLEL_GRID 1
-static task_thread_pool::task_thread_pool threadPool{std::max(1u, std::thread::hardware_concurrency() / 2)};
+static task_thread_pool::task_thread_pool threadPool { std::max(1u, std::thread::hardware_concurrency() / 2) };
 #endif
 
 struct Point {
@@ -23,7 +23,11 @@ class alignas(64) Grid {
 public:
     inline bool get(const Point& p) const { return grid_[index(p)]; }
     inline void set(const Point& p, const bool value) { grid_[index(p)] = value; }
-    inline void toggle(const Point& p) { const int idx = index(p); grid_[idx] = !grid_[idx]; }
+    inline void toggle(const Point& p)
+    {
+        const int idx = index(p);
+        grid_[idx] = !grid_[idx];
+    }
     int countLiveNeighbors(const Point& p) const;
     void toggleBlock(const Point& p);
     void updateGrid(const Grid<SIZE>& current);
@@ -36,7 +40,7 @@ private:
     inline void updateP(const Grid<SIZE>& current, const Point& p);
     inline static int index(const Point& p) { return (p.x * SIZE) + p.y; }
 #ifdef PARALLEL_GRID
-    static constexpr std::array<int, SIZE> indices = [](){ std::array<int, SIZE> v; std::iota(v.begin(), v.end(), 0); return v; }();
+    static constexpr std::array<int, SIZE> indices = []() { std::array<int, SIZE> v; std::iota(v.begin(), v.end(), 0); return v; }();
 #endif
 };
 
@@ -47,14 +51,14 @@ int Grid<SIZE>::countLiveNeighbors(const Point& p) const
     // Fast path for interior cells: no bounds checks and no per-neighbor index math
     if (p.x > 0 && p.x < SIZE - 1 && p.y > 0 && p.y < SIZE - 1) {
         const int idx = index(p);
-        return grid_[idx - SIZE - 1]  // Top-left
-             + grid_[idx - SIZE    ]  // Top
-             + grid_[idx - SIZE + 1]  // Top-right
-             + grid_[idx        - 1]  // Left
-             + grid_[idx        + 1]  // Right
-             + grid_[idx + SIZE - 1]  // Bottom-left
-             + grid_[idx + SIZE    ]  // Bottom
-             + grid_[idx + SIZE + 1]; // Bottom-right
+        return grid_[idx - SIZE - 1] // Top-left
+            + grid_[idx - SIZE] // Top
+            + grid_[idx - SIZE + 1] // Top-right
+            + grid_[idx - 1] // Left
+            + grid_[idx + 1] // Right
+            + grid_[idx + SIZE - 1] // Bottom-left
+            + grid_[idx + SIZE] // Bottom
+            + grid_[idx + SIZE + 1]; // Bottom-right
     }
     // General case with bounds checks
     int liveNeighbors = 0;

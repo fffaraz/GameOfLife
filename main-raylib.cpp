@@ -41,8 +41,7 @@ int main()
     GridType grid;
 
     // Main game loop
-    while (!WindowShouldClose())
-    {
+    while (!WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(BLACK);
         SimStep(grid);
@@ -51,7 +50,7 @@ int main()
             const auto [currGrid, lock] = grid.readBuffer();
             for (int i = 0; i < GRID_SIZE; ++i) {
                 for (int j = 0; j < GRID_SIZE; ++j) {
-                    if (currGrid.get({i, j})) {
+                    if (currGrid.get({ i, j })) {
                         aliveCount++;
                         DrawPixel(i, j, WHITE);
                     }
@@ -64,7 +63,7 @@ int main()
     }
 
     // Close window and OpenGL context
-    CloseWindow();        
+    CloseWindow();
 
     return 0;
 }
