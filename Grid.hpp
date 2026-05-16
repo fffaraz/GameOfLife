@@ -37,7 +37,7 @@ public:
 
 private:
     std::array<bool, SIZE * SIZE> grid_;
-    inline void updateP(const Grid<SIZE>& current, const Point& p);
+    inline void updatePoint(const Grid<SIZE>& current, const Point& p);
     inline static int index(const Point& p) { return (p.x * SIZE) + p.y; }
 #ifdef PARALLEL_GRID
     static constexpr std::array<int, SIZE> indices = []() { std::array<int, SIZE> v; std::iota(v.begin(), v.end(), 0); return v; }();
@@ -103,7 +103,7 @@ static inline bool gameOfLife(const bool cell, const int liveNeighbors)
 }
 
 template <int SIZE>
-void Grid<SIZE>::updateP(const Grid<SIZE>& current, const Point& p)
+void Grid<SIZE>::updatePoint(const Grid<SIZE>& current, const Point& p)
 {
     const int idx = index(p);
     const int live = current.countLiveNeighbors(p);
@@ -119,7 +119,7 @@ void Grid<SIZE>::updateGrid(const Grid<SIZE>& current)
     for (int x = 0; x < SIZE; ++x) {
         for (int y = 0; y < SIZE; ++y) {
             const Point p { x, y };
-            updateP(current, p);
+            updatePoint(current, p);
         }
     }
 }
@@ -135,7 +135,7 @@ void Grid<SIZE>::updateGrid(const Grid<SIZE>& current)
         [&](int x) {
             for (int y = 0; y < SIZE; ++y) {
                 const Point p { x, y };
-                updateP(current, p);
+                updatePoint(current, p);
             }
         });
 }
