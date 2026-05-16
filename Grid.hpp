@@ -51,14 +51,17 @@ int Grid<SIZE>::countLiveNeighbors(const Point& p) const
     // Fast path for interior cells: no bounds checks and no per-neighbor index math
     if (p.x > 0 && p.x < SIZE - 1 && p.y > 0 && p.y < SIZE - 1) {
         const int idx = index(p);
+        // clang-format off
         return grid_[idx - SIZE - 1] // Top-left
-            + grid_[idx - SIZE] // Top
-            + grid_[idx - SIZE + 1] // Top-right
-            + grid_[idx - 1] // Left
-            + grid_[idx + 1] // Right
-            + grid_[idx + SIZE - 1] // Bottom-left
-            + grid_[idx + SIZE] // Bottom
-            + grid_[idx + SIZE + 1]; // Bottom-right
+             + grid_[idx - SIZE    ] // Top
+             + grid_[idx - SIZE + 1] // Top-right
+             + grid_[idx        - 1] // Left
+             + grid_[idx        + 1] // Right
+             + grid_[idx + SIZE - 1] // Bottom-left
+             + grid_[idx + SIZE    ] // Bottom
+             + grid_[idx + SIZE + 1] // Bottom-right
+             ;
+        // clang-format on
     }
     // General case with bounds checks
     int liveNeighbors = 0;
