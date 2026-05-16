@@ -7,9 +7,7 @@
 
 #include <string>
 
-DoubleBuffer<Grid<GRID_SIZE>> grid;
-
-static void SimStep()
+static void SimStep(GridType& grid)
 {
     auto [nextGrid, writeLock] = grid.writeBuffer();
     if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
@@ -40,12 +38,14 @@ int main()
         SetTargetFPS(targetFPS);
     }
 
+    GridType grid;
+
     // Main game loop
     while (!WindowShouldClose())
     {
         BeginDrawing();
         ClearBackground(BLACK);
-        SimStep();
+        SimStep(grid);
         int aliveCount = 0;
         {
             const auto [currGrid, lock] = grid.readBuffer();

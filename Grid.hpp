@@ -19,7 +19,7 @@ struct Point {
 };
 
 template <int SIZE>
-class alignas(128) Grid {
+class alignas(64) Grid {
 public:
     inline bool get(const Point& p) const { return grid_[index(p)]; }
     inline void set(const Point& p, const bool value) { grid_[index(p)] = value; }

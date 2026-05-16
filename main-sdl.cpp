@@ -6,8 +6,6 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
-DoubleBuffer<Grid<GRID_SIZE>> grid;
-
 /* We will use this renderer to draw into this window every frame. */
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
@@ -41,7 +39,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
 
-static void SimStep()
+static void SimStep(GridType& grid)
 {
     float xpos = 0;
     float ypos = 0;
@@ -67,7 +65,8 @@ static void SimStep()
 /* This function runs once per frame, and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate)
 {
-    SimStep();
+    static GridType grid;
+    SimStep(grid);
 
     /* clear the window to the draw color. */
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);

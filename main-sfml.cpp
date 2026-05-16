@@ -12,10 +12,8 @@
 std::atomic_bool mouseRightPressed = false;
 std::atomic_bool mouseLeftPressed = false;
 
-DoubleBuffer<Grid<GRID_SIZE>> grid;
-
 // Update the next grid state
-static void updateGrid(const sf::RenderWindow& window)
+static void updateGrid(GridType& grid, const sf::RenderWindow& window)
 {
     // Get the writable next grid
     auto [nextGrid, writeLock] = grid.writeBuffer();
@@ -64,7 +62,7 @@ static const std::array<sf::Color, 9> colorMap {
 };
 
 // Function to update the vertex array
-int updateVertices(sf::RenderWindow& window, sf::VertexArray& vertices)
+int updateVertices(GridType& grid, sf::RenderWindow& window, sf::VertexArray& vertices)
 {
     int numAlive = 0; // Count of alive cells
     auto [currGrid, lock] = grid.readBuffer();
@@ -165,13 +163,15 @@ int main()
     txtFPS.setOutlineThickness(2);
     txtFPS.setOutlineColor(sf::Color::Black);
 
+    GridType grid;
+
     // Start the grid update thread
     std::atomic<float> epochsPerSecond = 0.0f;
-    std::jthread updateThread([&window, &epochsPerSecond](std::stop_token stop_token) {
+    std::jthread updateThread([&grid, &window, &epochsPerSecond](std::stop_token stop_token) {
         sf::Clock epochClock;
         int epochCount = 0;
         while (!stop_token.stop_requested()) {
-            updateGrid(window);
+            updateGrid(grid, window);
             epochCount++;
             if (epochClock.getElapsedTime().asSeconds() >= 1.0f) {
                 epochsPerSecond = epochCount / epochClock.getElapsedTime().asSeconds();
@@ -211,7 +211,7 @@ int main()
         }
 
         // Update the grid
-        const int numAlive = updateVertices(window, vertices);
+        const int numAlive = updateVertices(grid, window, vertices);
         txtNumAlive.setString("Alive: " + std::to_string(numAlive));
 
         // Update FPS counter
