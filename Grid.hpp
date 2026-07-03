@@ -15,8 +15,12 @@
 #include <cstdlib> // std::getenv, std::atoi
 #include <thread> // std::thread::hardware_concurrency
 
-// Worker count: GOL_THREADS env override if set, else half the hardware threads.
-static int defaultGridThreads()
+// Worker count for a grid of `rows` rows. GOL_THREADS overrides everything; else
+// use up to half the hardware threads, but keep each band at least
+// MIN_ROWS_PER_BAND rows so the per-generation barrier + halo-coherence cost stays
+// amortized. Over-threading a small grid is a net loss: at 512x512, 16 bands run
+// ~3x slower than 4, because the tiny per-band work can't hide the sync overhead.
+static int gridThreadsForRows(int rows)
 {
     if (const char* env = std::getenv("GOL_THREADS")) {
         const int n = std::atoi(env);
@@ -24,10 +28,19 @@ static int defaultGridThreads()
             return n;
         }
     }
-    return static_cast<int>(std::max(1u, std::thread::hardware_concurrency() / 2));
+    constexpr int MIN_ROWS_PER_BAND = 128;
+    const int byHardware = static_cast<int>(std::max(1u, std::thread::hardware_concurrency() / 2));
+    const int byWork = std::max(1, rows / MIN_ROWS_PER_BAND);
+    return std::min(byHardware, byWork);
 }
 
-static BandExecutor gridExecutor { defaultGridThreads() };
+// One persistent worker pool per grid size, sized for that size on first use.
+template <int SIZE>
+static BandExecutor& gridExecutor()
+{
+    static BandExecutor exec { gridThreadsForRows(SIZE) };
+    return exec;
+}
 #endif
 
 struct Point {
@@ -194,8 +207,9 @@ void Grid<SIZE>::updateGrid(const Grid<SIZE>& current)
 template <int SIZE>
 void Grid<SIZE>::updateGrid(const Grid<SIZE>& current)
 {
-    const int n = gridExecutor.size();
-    gridExecutor.run([this, &current, n](int t) {
+    BandExecutor& exec = gridExecutor<SIZE>();
+    const int n = exec.size();
+    exec.run([this, &current, n](int t) {
         const int begin = static_cast<int>(static_cast<long long>(t) * SIZE / n);
         const int end = static_cast<int>(static_cast<long long>(t + 1) * SIZE / n);
         for (int x = begin; x < end; ++x) {

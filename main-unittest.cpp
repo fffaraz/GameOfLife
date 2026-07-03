@@ -8,6 +8,7 @@
 
 #include "Grid.hpp"
 
+#include <cstdint>
 #include <cstdio>
 #include <initializer_list>
 
@@ -286,17 +287,72 @@ void test_non_toroidal_edges()
     CHECK(countAlive(stepN(rightBlinker, 2)) == 0);
 }
 
-// The parallel band executor must produce identical results across runs; a chaotic
-// R-pentomino evolved twice should match bit for bit.
+// Generic helpers for a grid size that actually gets multiple worker bands. The
+// pattern tests above run on Grid<N=128>, which the size-aware thread heuristic
+// (>=128 rows/band) deliberately runs single-threaded.
+template <int S>
+Grid<S> evolve(Grid<S> g, int n)
+{
+    for (int i = 0; i < n; ++i) {
+        Grid<S> d;
+        d.updateGrid(g);
+        g = d;
+    }
+    return g;
+}
+
+template <int S>
+bool sameGrid(const Grid<S>& a, const Grid<S>& b)
+{
+    for (int x = 0; x < S; ++x) {
+        for (int y = 0; y < S; ++y) {
+            if (a.get({ x, y }) != b.get({ x, y })) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+template <int S>
+int aliveCount(const Grid<S>& g)
+{
+    int c = 0;
+    for (int x = 0; x < S; ++x) {
+        for (int y = 0; y < S; ++y) {
+            c += g.get({ x, y }) ? 1 : 0;
+        }
+    }
+    return c;
+}
+
+// The parallel band executor must produce identical results run to run. A 256-row
+// grid gets 2 worker bands (boundary at row 128); speckling live cells across every
+// row means both bands and their shared halo rows are active, so a data race at a
+// band edge would diverge the two runs.
 void test_parallel_determinism()
 {
-    G g;
+    constexpr int S = 256;
+    Grid<S> g;
     g.clear();
-    setCells(g, { { 60, 61 }, { 60, 62 }, { 61, 60 }, { 61, 61 }, { 62, 61 } });
-    const G a = stepN(g, 30);
-    const G b = stepN(g, 30);
-    CHECK(gridsEqual(a, b));
-    CHECK(countAlive(a) > 0);
+    // Irregular ~50% "soup" (a hashed fill, not a regular lattice) so it stays busy
+    // for the whole run instead of collapsing -- otherwise the two runs would agree
+    // only by both dying out.
+    for (int x = 0; x < S; ++x) {
+        for (int y = 0; y < S; ++y) {
+            uint32_t h = (static_cast<uint32_t>(x) * 73856093u) ^ (static_cast<uint32_t>(y) * 19349663u);
+            h ^= h >> 13;
+            h *= 0x5bd1e995u;
+            h ^= h >> 15;
+            if (h & 1u) {
+                g.set({ x, y }, true);
+            }
+        }
+    }
+    const Grid<S> a = evolve(g, 20);
+    const Grid<S> b = evolve(g, 20);
+    CHECK(sameGrid(a, b));
+    CHECK(aliveCount(a) > 0); // guards against a vacuous empty == empty pass
 }
 
 struct Test {
