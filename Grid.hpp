@@ -112,7 +112,8 @@ inline void Grid<SIZE>::updateRow(const Grid<SIZE>& current, const int x)
     if (x == 0 || x == SIZE - 1) {
         for (int y = 0; y < SIZE; ++y) {
             const Point p { x, y };
-            grid_[index(p)] = gameOfLife(current.grid_[index(p)], current.countLiveNeighbors(p));
+            const int idx = index(p);
+            grid_[idx] = gameOfLife(current.grid_[idx], current.countLiveNeighbors(p));
         }
         return;
     }
