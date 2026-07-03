@@ -78,3 +78,9 @@ target_link_libraries(gameoflife-raylib PRIVATE gameoflife raylib)
 
 add_executable(gameoflife-cli main-cli.cpp)
 target_link_libraries(gameoflife-cli PRIVATE gameoflife)
+
+add_executable(gameoflife-unittest main-unittest.cpp)
+target_link_libraries(gameoflife-unittest PRIVATE gameoflife)
+
+enable_testing()
+add_test(NAME grid_unit_tests COMMAND gameoflife-unittest)
