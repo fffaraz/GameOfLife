@@ -11,6 +11,10 @@
 #define PARALLEL_GRID 1
 #include "BandExecutor.hpp"
 
+#include <algorithm> // std::max
+#include <cstdlib> // std::getenv, std::atoi
+#include <thread> // std::thread::hardware_concurrency
+
 // Worker count: GOL_THREADS env override if set, else half the hardware threads.
 static int defaultGridThreads()
 {

@@ -3,10 +3,8 @@
 
 #pragma once
 
-#include <algorithm>
 #include <atomic>
 #include <barrier>
-#include <cstdlib>
 #include <thread>
 #include <type_traits>
 #include <vector>
