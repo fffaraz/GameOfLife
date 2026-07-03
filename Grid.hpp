@@ -37,7 +37,7 @@ public:
 
 private:
     std::array<bool, SIZE * SIZE> grid_;
-    inline void updatePoint(const Grid<SIZE>& current, const Point& p);
+    inline void updateRow(const Grid<SIZE>& current, int x);
     inline static int index(const Point& p) { return (p.x * SIZE) + p.y; }
 #ifdef PARALLEL_GRID
     static constexpr std::array<int, SIZE> indices = []() { std::array<int, SIZE> v; std::iota(v.begin(), v.end(), 0); return v; }();
@@ -102,12 +102,41 @@ static inline bool gameOfLife(const bool cell, const int liveNeighbors)
     return liveNeighbors == 3 || (cell && liveNeighbors == 2);
 }
 
+// Update a single row. Border rows/columns use the general path; the interior
+// slides a 3-wide window of column sums so each cell reads only one fresh
+// column (3 loads) instead of all 8 neighbors, with no per-cell branch.
 template <int SIZE>
-void Grid<SIZE>::updatePoint(const Grid<SIZE>& current, const Point& p)
+inline void Grid<SIZE>::updateRow(const Grid<SIZE>& current, const int x)
 {
-    const int idx = index(p);
-    const int live = current.countLiveNeighbors(p);
-    grid_[idx] = gameOfLife(current.grid_[idx], live);
+    // Top and bottom edge rows have no full 3x3 neighborhood: use the general path.
+    if (x == 0 || x == SIZE - 1) {
+        for (int y = 0; y < SIZE; ++y) {
+            const Point p { x, y };
+            grid_[index(p)] = gameOfLife(current.grid_[index(p)], current.countLiveNeighbors(p));
+        }
+        return;
+    }
+
+    // Distinct grids (double buffer / ping-pong), so out never aliases the inputs.
+    const bool* const __restrict top = &current.grid_[(x - 1) * SIZE];
+    const bool* const __restrict mid = &current.grid_[x * SIZE];
+    const bool* const __restrict bot = &current.grid_[(x + 1) * SIZE];
+    bool* const __restrict out = &grid_[x * SIZE];
+
+    // Left/right edge columns have no full neighborhood: general path.
+    out[0] = gameOfLife(mid[0], current.countLiveNeighbors({ x, 0 }));
+    out[SIZE - 1] = gameOfLife(mid[SIZE - 1], current.countLiveNeighbors({ x, SIZE - 1 }));
+
+    // Interior: liveNeighbors = colSum(y-1) + colSum(y) + colSum(y+1) - self.
+    int colPrev = top[0] + mid[0] + bot[0];
+    int colCurr = top[1] + mid[1] + bot[1];
+    for (int y = 1; y < SIZE - 1; ++y) {
+        const int colNext = top[y + 1] + mid[y + 1] + bot[y + 1];
+        const int live = colPrev + colCurr + colNext - mid[y];
+        out[y] = gameOfLife(mid[y], live);
+        colPrev = colCurr;
+        colCurr = colNext;
+    }
 }
 
 #ifndef PARALLEL_GRID
@@ -117,10 +146,7 @@ template <int SIZE>
 void Grid<SIZE>::updateGrid(const Grid<SIZE>& current)
 {
     for (int x = 0; x < SIZE; ++x) {
-        for (int y = 0; y < SIZE; ++y) {
-            const Point p { x, y };
-            updatePoint(current, p);
-        }
+        updateRow(current, x);
     }
 }
 
@@ -132,12 +158,7 @@ void Grid<SIZE>::updateGrid(const Grid<SIZE>& current)
 {
     // std::execution::par_unseq
     std::for_each(poolstl::par.on(threadPool), indices.begin(), indices.end(),
-        [&](int x) {
-            for (int y = 0; y < SIZE; ++y) {
-                const Point p { x, y };
-                updatePoint(current, p);
-            }
-        });
+        [&](int x) { updateRow(current, x); });
 }
 
 #endif
