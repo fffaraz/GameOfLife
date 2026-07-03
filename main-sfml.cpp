@@ -6,9 +6,11 @@
 #include <SFML/Graphics.hpp>
 
 #include <atomic>
+#include <cstdint>
 #include <iostream>
 #include <memory>
 #include <thread>
+#include <vector>
 
 std::atomic_bool mouseRightPressed = false;
 std::atomic_bool mouseLeftPressed = false;
@@ -62,13 +64,15 @@ static const std::array<sf::Color, 9> colorMap {
     sf::Color::White, // 8 live neighbors
 };
 
-// Function to update the vertex array
-int updateVertices(GridType& grid, sf::RenderWindow& window, sf::VertexArray& vertices)
+// Rewrite the RGBA pixel buffer from the grid; returns the live-cell count. One
+// pixel per cell (the texture is scaled up by CELL_SIZE at draw time), replacing
+// the old per-cell vertex array of up to 6 vertices per cell.
+int fillPixels(GridType& grid, std::vector<std::uint8_t>& pixels)
 {
-    int numAlive = 0; // Count of alive cells
-    auto [currGrid, lock] = grid.readBuffer();
-    for (int i = 0; i < GRID_SIZE; ++i) {
-        for (int j = 0; j < GRID_SIZE; ++j) {
+    int numAlive = 0;
+    const auto [currGrid, lock] = grid.readBuffer();
+    for (int j = 0; j < GRID_SIZE; ++j) { // texture row = screen y
+        for (int i = 0; i < GRID_SIZE; ++i) { // texture column = screen x
             const Point p { i, j };
             const bool cellAlive = currGrid.get(p);
             numAlive += cellAlive ? 1 : 0;
@@ -77,18 +81,11 @@ int updateVertices(GridType& grid, sf::RenderWindow& window, sf::VertexArray& ve
 #else
             const sf::Color color = cellAlive ? sf::Color::White : sf::Color::Black;
 #endif
-            if (CELL_SIZE == 1) {
-                const int index = (i * GRID_SIZE) + j;
-                vertices[index].color = color;
-                continue;
-            }
-            const int index = ((i * GRID_SIZE) + j) * 6;
-            vertices[index + 0].color = color;
-            vertices[index + 1].color = color;
-            vertices[index + 2].color = color;
-            vertices[index + 3].color = color;
-            vertices[index + 4].color = color;
-            vertices[index + 5].color = color;
+            const std::size_t idx = ((static_cast<std::size_t>(j) * GRID_SIZE) + i) * 4;
+            pixels[idx + 0] = color.r;
+            pixels[idx + 1] = color.g;
+            pixels[idx + 2] = color.b;
+            pixels[idx + 3] = color.a;
         }
     }
     return numAlive; // Return the number of alive cells
@@ -107,32 +104,16 @@ int main()
     }
     std::cout.flush();
 
-    // Vertex array for the grid
-    sf::VertexArray vertices = CELL_SIZE > 1 ? sf::VertexArray(sf::PrimitiveType::Triangles, GRID_SIZE * GRID_SIZE * 6) : sf::VertexArray(sf::PrimitiveType::Points, GRID_SIZE * GRID_SIZE);
-    if (CELL_SIZE > 1) {
-        for (int i = 0; i < GRID_SIZE; ++i) {
-            for (int j = 0; j < GRID_SIZE; ++j) {
-                const int index = ((i * GRID_SIZE) + j) * 6;
-                const float x = (float)i * CELL_SIZE;
-                const float y = (float)j * CELL_SIZE;
-                vertices[index + 0].position = sf::Vector2f(x, y);
-                vertices[index + 1].position = sf::Vector2f(x + CELL_SIZE, y);
-                vertices[index + 2].position = sf::Vector2f(x + CELL_SIZE, y + CELL_SIZE);
-                vertices[index + 3].position = sf::Vector2f(x, y);
-                vertices[index + 4].position = sf::Vector2f(x, y + CELL_SIZE);
-                vertices[index + 5].position = sf::Vector2f(x + CELL_SIZE, y + CELL_SIZE);
-            }
-        }
-    } else {
-        for (int i = 0; i < GRID_SIZE; ++i) {
-            for (int j = 0; j < GRID_SIZE; ++j) {
-                const int index = (i * GRID_SIZE) + j;
-                const float x = (float)i * CELL_SIZE;
-                const float y = (float)j * CELL_SIZE;
-                vertices[index].position = sf::Vector2f(x, y);
-            }
-        }
+    // One texture holds the whole grid at 1 pixel/cell, scaled up by CELL_SIZE via
+    // the sprite. Rewritten and uploaded once per frame instead of a per-cell mesh.
+    sf::Texture texture;
+    if (!texture.resize({ GRID_SIZE, GRID_SIZE })) {
+        std::cerr << "Failed to create grid texture\n";
+        return 1;
     }
+    std::vector<std::uint8_t> pixels(static_cast<std::size_t>(GRID_SIZE) * GRID_SIZE * 4);
+    sf::Sprite sprite(texture);
+    sprite.setScale({ static_cast<float>(CELL_SIZE), static_cast<float>(CELL_SIZE) });
 
     // Load font for displaying text
     sf::Font font;
@@ -213,8 +194,9 @@ int main()
             }
         }
 
-        // Update the grid
-        const int numAlive = updateVertices(grid, window, vertices);
+        // Rebuild the grid texture from the latest state.
+        const int numAlive = fillPixels(grid, pixels);
+        texture.update(pixels.data());
         txtNumAlive.setString("Alive: " + std::to_string(numAlive));
 
         // Update FPS counter
@@ -234,7 +216,7 @@ int main()
         window.clear();
 
         // Draw the grid and texts
-        window.draw(vertices);
+        window.draw(sprite);
         window.draw(txtNumAlive);
         window.draw(txtFPS);
 

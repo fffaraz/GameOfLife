@@ -9,6 +9,7 @@
 /* We will use this renderer to draw into this window every frame. */
 static SDL_Window* window = NULL;
 static SDL_Renderer* renderer = NULL;
+static SDL_Texture* texture = NULL;
 
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
@@ -26,6 +27,15 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
         return SDL_APP_FAILURE;
     }
     SDL_SetRenderLogicalPresentation(renderer, GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+
+    /* Streaming texture holds the grid at 1 pixel/cell, scaled to fill the window
+       each frame. Replaces per-cell SDL_RenderPoint calls with one upload + blit. */
+    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, GRID_SIZE, GRID_SIZE);
+    if (!texture) {
+        SDL_Log("Couldn't create grid texture: %s", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+    SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST); /* crisp square cells */
 
     return SDL_APP_CONTINUE; /* carry on with the program! */
 }
@@ -68,25 +78,22 @@ SDL_AppResult SDL_AppIterate(void* appstate)
     static GridType grid;
     SimStep(grid);
 
-    /* clear the window to the draw color. */
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderClear(renderer);
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-
-    int aliveCount = 0;
-    {
+    /* Rewrite the grid texture: white = alive, black = dead (ARGB8888). */
+    void* texPixels = NULL;
+    int pitch = 0;
+    if (SDL_LockTexture(texture, NULL, &texPixels, &pitch)) {
         const auto [currGrid, lock] = grid.readBuffer();
-        for (int i = 0; i < GRID_SIZE; ++i) {
-            for (int j = 0; j < GRID_SIZE; ++j) {
-                if (currGrid.get({ i, j })) {
-                    aliveCount++;
-                    SDL_RenderPoint(renderer, i, j);
-                }
+        for (int j = 0; j < GRID_SIZE; ++j) { /* texture row = screen y */
+            Uint32* const row = reinterpret_cast<Uint32*>(static_cast<Uint8*>(texPixels) + (j * pitch));
+            for (int i = 0; i < GRID_SIZE; ++i) { /* column = screen x */
+                row[i] = currGrid.get({ i, j }) ? 0xFFFFFFFFu : 0xFF000000u;
             }
         }
+        SDL_UnlockTexture(texture);
     }
 
-    /* put the newly-cleared rendering on the screen. */
+    SDL_RenderClear(renderer);
+    SDL_RenderTexture(renderer, texture, NULL, NULL); /* scale to fill the window */
     SDL_RenderPresent(renderer);
 
     return SDL_APP_CONTINUE; /* carry on with the program! */
@@ -95,5 +102,6 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 /* This function runs once at shutdown. */
 void SDL_AppQuit(void* appstate, SDL_AppResult result)
 {
+    SDL_DestroyTexture(texture);
     /* SDL will clean up the window/renderer for us. */
 }

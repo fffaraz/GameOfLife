@@ -82,6 +82,14 @@ int main()
     auto gridPtr = std::make_unique<GridType>();
     GridType& grid = *gridPtr;
 
+    // One GPU texture holds the whole grid at 1 pixel/cell. Each frame we rewrite
+    // its CPU-side pixel buffer, upload it once, and let the GPU scale it up by
+    // CELL_SIZE -- replacing up to GRID_SIZE^2 per-cell DrawPixel calls with a
+    // single upload and a single draw. gridImage.data doubles as our pixel buffer.
+    Image gridImage = GenImageColor(GRID_SIZE, GRID_SIZE, BLACK);
+    Texture2D gridTexture = LoadTextureFromImage(gridImage);
+    Color* const pixels = static_cast<Color*>(gridImage.data);
+
     std::atomic<float> epochsPerSecond = 0.0f;
     std::jthread updateThread([&grid, &epochsPerSecond](std::stop_token stop_token) {
         auto epochStart = std::chrono::steady_clock::now();
@@ -112,16 +120,22 @@ int main()
         int aliveCount = 0;
         {
             const auto [currGrid, lock] = grid.readBuffer();
-            for (int i = 0; i < GRID_SIZE; ++i) {
-                for (int j = 0; j < GRID_SIZE; ++j) {
+            // Texture row j is screen row y=j; column i is screen x=i.
+            for (int j = 0; j < GRID_SIZE; ++j) {
+                Color* const row = &pixels[j * GRID_SIZE];
+                for (int i = 0; i < GRID_SIZE; ++i) {
                     const Point p { i, j };
                     if (currGrid.get(p)) {
                         aliveCount++;
-                        DrawPixel(i, j, colorMap[currGrid.countLiveNeighbors(p)]);
+                        row[i] = colorMap[currGrid.countLiveNeighbors(p)];
+                    } else {
+                        row[i] = BLACK;
                     }
                 }
             }
         }
+        UpdateTexture(gridTexture, pixels);
+        DrawTextureEx(gridTexture, { 0.0f, 0.0f }, 0.0f, static_cast<float>(CELL_SIZE), WHITE);
 
         const std::string aliveStr = "Alive: " + std::to_string(aliveCount);
         DrawTextOutlined(aliveStr.c_str(), 10, 5, 24, WHITE, BLACK);
@@ -138,6 +152,8 @@ int main()
 
     updateThread.request_stop();
 
+    UnloadTexture(gridTexture);
+    UnloadImage(gridImage);
     CloseWindow();
 
     return 0;
