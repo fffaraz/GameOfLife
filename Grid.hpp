@@ -9,9 +9,6 @@
 #if 1 // Enable multithreaded calculation of grid updates
 #define PARALLEL_GRID 1
 #include "BandExecutor.hpp"
-#include <algorithm>
-#include <cstdlib>
-#include <thread>
 
 // Worker count: GOL_THREADS env override if set, else half the hardware threads.
 static int defaultGridThreads()
