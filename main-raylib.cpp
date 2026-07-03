@@ -9,6 +9,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstdio>
+#include <memory>
 #include <string>
 #include <thread>
 
@@ -76,7 +77,10 @@ int main()
         SetTargetFPS(targetFPS);
     }
 
-    GridType grid;
+    // Heap-allocated: a GridType holds two grids inline (~8 MB at GRID_SIZE 2048),
+    // which overflows the stack if placed as a local.
+    auto gridPtr = std::make_unique<GridType>();
+    GridType& grid = *gridPtr;
 
     std::atomic<float> epochsPerSecond = 0.0f;
     std::jthread updateThread([&grid, &epochsPerSecond](std::stop_token stop_token) {

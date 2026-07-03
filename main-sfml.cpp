@@ -7,6 +7,7 @@
 
 #include <atomic>
 #include <iostream>
+#include <memory>
 #include <thread>
 
 std::atomic_bool mouseRightPressed = false;
@@ -162,7 +163,10 @@ int main()
     txtFPS.setOutlineThickness(2);
     txtFPS.setOutlineColor(sf::Color::Black);
 
-    GridType grid;
+    // Heap-allocated: a GridType holds two grids inline (~8 MB at GRID_SIZE 2048),
+    // which overflows the stack if placed as a local.
+    auto gridPtr = std::make_unique<GridType>();
+    GridType& grid = *gridPtr;
 
     // Start the grid update thread
     std::atomic<float> epochsPerSecond = 0.0f;
