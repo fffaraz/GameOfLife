@@ -63,7 +63,7 @@ FetchContent_Declare(
     EXCLUDE_FROM_ALL)
 FetchContent_MakeAvailable(raylib)
 
-add_library(gameoflife Grid.hpp DoubleBuffer.hpp Common.hpp Common.cpp)
+add_library(gameoflife Grid.hpp BandExecutor.hpp DoubleBuffer.hpp Common.hpp Common.cpp)
 target_link_libraries(gameoflife PUBLIC poolSTL::poolSTL)
 
 add_executable(gameoflife-sfml main-sfml.cpp)
