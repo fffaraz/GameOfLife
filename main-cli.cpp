@@ -6,6 +6,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
+#include <memory>
 #include <string>
 
 namespace {
@@ -94,14 +95,15 @@ int main(int argc, char** argv)
     std::cout.flush();
 
     // Ping-pong between two raw grids — no DoubleBuffer locking overhead for the benchmark.
-    Grid<GRID_SIZE> a;
-    Grid<GRID_SIZE> b;
-    a.clear();
-    b.clear();
-    a.addNoise(opts.initialNoise);
+    // Heap-allocated: at large GRID_SIZE two grids would overflow the stack.
+    auto a = std::make_unique<Grid<GRID_SIZE>>();
+    auto b = std::make_unique<Grid<GRID_SIZE>>();
+    a->clear();
+    b->clear();
+    a->addNoise(opts.initialNoise);
 
-    Grid<GRID_SIZE>* curr = &a;
-    Grid<GRID_SIZE>* next = &b;
+    Grid<GRID_SIZE>* curr = a.get();
+    Grid<GRID_SIZE>* next = b.get();
 
     using clock = std::chrono::steady_clock;
 
